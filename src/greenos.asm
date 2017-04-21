@@ -1,7 +1,7 @@
 org 0x7C00 ;
 ; hello-os
 ; TAB=4
-
+LOAD_ADDR equ 0x8000
 ; 标准FAT12格式软盘专用的代码 Stand FAT12 format floppy code
 jmp entry
 	DB	0xeb,0x4e,0x90
@@ -27,13 +27,11 @@ jmp entry
 ; 程序主体
 entry:	
 	mov ax , 0
-	mov ss , ax 
 	mov ds , ax 
 	mov es , ax 
-	mov si , buf
 
 readFloppy:
-	mov bx , buf
+	mov bx , LOAD_ADDR
 	mov ah , 0x02  ;read disk secotrs
 	mov al , 1     ;number of sectors transferred 
 	mov dl , 0     ;drive number
@@ -42,23 +40,7 @@ readFloppy:
 	mov cl , 2     ; secktor number
 	int 0x13	
 	
-	mov si , buf
-	
-show_msg:
-	mov al , [si]
-	inc si 
-	cmp al , 0 
-	je fin 
-	mov ah , 0x0e
-	mov bx , 22
-	int 0x10
-	jmp show_msg
-fin:
-	hlt
-	jmp fin 		
-buf:
-	resb 64
-	db 0 
+	jmp LOAD_ADDR
 ; 信息显示部分
 
 
