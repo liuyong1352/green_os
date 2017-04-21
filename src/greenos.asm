@@ -25,11 +25,25 @@ jmp entry
 		times	18		db 0    ; 先空出18字节
 
 ; 程序主体
-
 entry:	
 	mov ax , 0
+	mov ss , ax 
 	mov ds , ax 
-	mov si , msg 
+	mov es , ax 
+	mov si , buf
+
+readFloppy:
+	mov bx , buf
+	mov ah , 0x02  ;read disk secotrs
+	mov al , 1     ;number of sectors transferred 
+	mov dl , 0     ;drive number
+	mov dh , 0     ; head number
+	mov ch , 0     ; track number
+	mov cl , 2     ; secktor number
+	int 0x13	
+	
+	mov si , buf
+	
 show_msg:
 	mov al , [si]
 	inc si 
@@ -42,9 +56,9 @@ show_msg:
 fin:
 	hlt
 	jmp fin 		
-msg:
-		DB "hello greenos"
-		DB 0		
+buf:
+	resb 64
+	db 0 
 ; 信息显示部分
 
 

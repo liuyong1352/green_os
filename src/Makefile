@@ -4,7 +4,7 @@ default:
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 	
-asm:greenos.asm Makefile
+asm:greenos.asm kernel.asm  Makefile
 	nasm greenos.asm -o boot
 img:asm boot imgTool  Makefile
 	dd if=/dev/zero of=zImg bs=512 count=2880
@@ -13,8 +13,8 @@ img:asm boot imgTool  Makefile
 	echo "hello green os !" >> hello.txt
 	./imgTool hello.txt zImg 0 0 2
 run:img zImg
-	qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
-
+	#qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
+	qemu-system-i386 -drive file=zImg,format=raw,index=0,if=floppy	
 clean:
 	rm -f boot imgTool zImg hello.txt a.out
 	
