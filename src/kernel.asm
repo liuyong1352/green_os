@@ -7,15 +7,17 @@ jmp entry
 LABEL_GDT:	    Descriptor        0,            0,                   0  
 LABEL_DESC_CODE32:  Descriptor        0,            1,                 DA_C + DA_32
 LABEL_DESC_VIDEO:   Descriptor     0B8000h,         0ffffh,            DA_DRW
-LABEL_DESC_5M:	    Descriptor     050000h,         0ffffh,            DA_DRW
+LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRW
+LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRW + DA_32
 
 GdtLen     equ    $ - LABEL_GDT
 GdtPtr     dw     GdtLen - 1
            dd     0
 
-SelectorCode32    equ   LABEL_DESC_CODE32 -  LABEL_GDT
-SelectorVideo     equ   LABEL_DESC_VIDEO  -  LABEL_GDT
-Selector5M        equ   LABEL_DESC_5M     -  LABEL_GDT
+SelectorCode32    equ   LABEL_DESC_CODE32 - LABEL_GDT
+SelectorVideo     equ   LABEL_DESC_VIDEO  - LABEL_GDT
+SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
+SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
 [SECTION  .s16]
 [BITS  16]
@@ -25,7 +27,13 @@ entry:
      mov   es, ax
      mov   ss, ax
      mov   sp, 0100h
+	
 
+	;switch vga
+	 mov al , 0x13
+	 mov ah , 0	
+	int 0x10
+	
      xor   eax, eax
      mov   ax,  cs
      shl   eax, 4
@@ -35,6 +43,12 @@ entry:
      mov   byte [LABEL_DESC_CODE32 + 4], al
      mov   byte [LABEL_DESC_CODE32 + 7], ah
 
+	;set stack for c language
+	xor eax , eax 
+	mov ax , cs 
+	shl eax , 4
+	add eax , LABEL_STACK
+	
      xor   eax, eax
      mov   ax, ds
      shl   eax, 4
@@ -58,54 +72,24 @@ entry:
      [SECTION .s32]
      [BITS  32]
 LABEL_SEG_CODE32:
-;write data to 5 M
-;write data to 5 M
-	mov ax , Selector5M
-	mov gs , ax 
-	mov es , ax
-	mov si , msg
-	mov edi , 0
-writeDataTo5M:
-	cmp byte [ds:si] , 0 
-	je showCharEntry
-	mov al , [ds:si]
-	mov byte [es:edi] , al 	
-	inc si 
-	inc edi 
-	jmp writeDataTo5M
-
-showCharEntry:
-	mov si , 0 
-	call print_str
-	jmp end
-;================================================
-;gs:si
-print_str:
-	push si
-	push edi 
-	mov ax , SelectorVideo
-	mov es , ax 
-	mov edi , 160*20 + 20*2
+	mov ax , SelectorStack
+	mov ss , ax 
+	mov esp , TopOfStack
+	mov ax ,SelectorVram
+	mov ds , ax 
 	
-print_loop:
-	mov al , [gs:si]
-	cmp al , 0 
-	je print_str_ret
-	mov ah , 0ch 
-	mov [es:edi] , ax
-	inc si 
-	add edi , 2
-	jmp print_loop 
-print_str_ret: 
-	pop edi
-	pop si 	
-	ret
+	%include "write_vga.asm"	
 
-
-end: 
+;void io_hlt()
+io_hlt: 
 	hlt
-	jmp end
-    msg:
-    DB     "this sentence will be writen to 5M seg", 0
+	ret
+	
 
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
+[SECTION .gs]
+ALIGN 32
+[BITS 32]
+LABEL_STACK:
+times 512 db 0 
+TopOfStack equ $- LABEL_STACK
