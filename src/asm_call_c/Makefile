@@ -4,12 +4,9 @@ defualt:
 	ld -m elf_i386 -o hello sys_print.o hello.o
 
 asm:
-	
-#	gcc -m64 -fno-asynchronous-unwind-tables -s  -c -o hello.o hello.c
-#	objconv -fnasm hello.o -o hello.asm
-#	nasm -f elf sys_print02.asm  -o sys_print.o	
 	gcc -m32 -fno-asynchronous-unwind-tables -s  -c -o hello.o hello.c
 	objconv -fnasm hello.o -o hello.asm
-	nasm -f elf32 sys_print02.asm  -o sys_print.o	
+	nasm -f elf32 sys_print02.asm  -o sys_print.o
+	gcc -m32 sys_print.o -o sys_print
 clean:
-	rm *.o hello hello.asm 
+	rm *.o hello hello.asm sys_print 
