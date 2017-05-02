@@ -1,5 +1,5 @@
 [section .data]
-
+global main
 arg1 dd 100
 arg2 dd 2
 
