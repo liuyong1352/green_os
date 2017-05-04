@@ -11,10 +11,7 @@ void cmian(void){
 	int i ; 
 	char* p = (char*)0 ;
 	init_palette();
-	for(i = 0xa0000 ; i <= 0xaffff ; i++ ){
-		p = (char*)i ;
-		*p = i&0x0f;
-	}
+	
 	for(;;) {
 		io_hlt();
 	}
@@ -26,9 +23,9 @@ void set_palette(int start , int end , unsigned char* rgb) {
 	io_cli();
 	io_out8(0x03c8 , start); //set palette number
 	for(i = start ; i <= end ; i++ ) {
-		io_out8(0x03c9,rgb[0]);
-		io_out8(0x03c9,rgb[1]);
-		io_out8(0x03c9,rgb[2]);
+		io_out8(0x03c9,rgb[0]/4);
+		io_out8(0x03c9,rgb[1]/4);
+		io_out8(0x03c9,rgb[2]/4);
 		rgb = rgb + 3 ;
 	}
 	io_store_eflags(eflags);

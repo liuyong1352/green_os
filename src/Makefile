@@ -3,7 +3,11 @@ default:
 	make asm
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
-asm:greenos.asm kernel.asm  Makefile
+objconvAsm:write_vga.c
+	gcc -m32 -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
+	objconv -fnasm write_vga.o
+	python delUnusedSymbol.py 
+asm:objconvAsm  _write_vga.asm greenos.asm kernel.asm  Makefile
 	nasm greenos.asm -o boot 
 	nasm kernel.asm -o kernel
 img:asm boot kernel imgTool  Makefile
@@ -14,5 +18,5 @@ run:img zImg
 	#qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
 	qemu-system-i386 -drive file=zImg,format=raw,index=0,if=floppy	
 clean:
-	rm -f boot kernel imgTool zImg  a.out *.o
+	rm -f boot kernel imgTool zImg  *.o write_vga.asm _write_vga.asm
 	

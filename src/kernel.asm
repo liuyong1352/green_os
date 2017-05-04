@@ -78,7 +78,7 @@ LABEL_SEG_CODE32:
 	mov ax ,SelectorVram
 	mov ds , ax 
 	
-	%include "write_vga.asm"	
+	%include "_write_vga.asm"	
 	%include "kernel_lib.asm"
 
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
