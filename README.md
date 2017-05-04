@@ -8,12 +8,20 @@ git install https://github.com/liuyong1352/green_os.git
 
 
 ##Ubantu
-run this shell
-sh bin/run.sh
+1. cd green_os/src
 
-##Win64:
+2. make run
 
-git checkout day0_win64
+
+以下是得到c语言对应的汇编代码
+
+
+1. compile write_vga.c 
+gcc -m32 -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
+
+2. 反汇编，并删除其中不需要的代码 参考write_vga.asm
+objconv -fnasm  write_vga.o
+
 
 
 
