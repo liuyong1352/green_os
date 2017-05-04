@@ -79,12 +79,7 @@ LABEL_SEG_CODE32:
 	mov ds , ax 
 	
 	%include "write_vga.asm"	
-
-;void io_hlt()
-io_hlt: 
-	hlt
-	ret
-	
+	%include "kernel_lib.asm"
 
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
 [SECTION .gs]

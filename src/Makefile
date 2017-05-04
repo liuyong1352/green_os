@@ -14,5 +14,5 @@ run:img zImg
 	#qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
 	qemu-system-i386 -drive file=zImg,format=raw,index=0,if=floppy	
 clean:
-	rm -f boot kernel imgTool zImg  a.out
+	rm -f boot kernel imgTool zImg  a.out *.o
 	
