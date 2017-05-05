@@ -10,7 +10,9 @@ git install https://github.com/liuyong1352/green_os.git
 ##Ubantu
 1. cd green_os/src
 
-2. make run
+2. make run_drawStripe
+3. make run_drawRect
+4. make run_drawDesktop
 
 
 以下是得到c语言对应的汇编代码

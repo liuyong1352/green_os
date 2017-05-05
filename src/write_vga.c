@@ -16,6 +16,7 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
+
 void io_hlt();
 void init_palette(void);
 void io_cli(void);
@@ -32,6 +33,15 @@ void cmian(void){
 	//destop
 	int xsize = 320 ;
 	int ysize = 200 ;
+
+	#ifdef DRAW_STRIPE 
+	for (i = 0xa0000; i <= 0xaffff; i++) {
+        vram = (char*)i;
+        *vram = i & 0x0f;  
+    }
+	#endif
+	
+	#ifdef DRAW_DESKTOP
 	boxfill8(vram, xsize, COL8_008484, 0, 0, xsize-1, ysize-29);
 	boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
 	boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
@@ -48,21 +58,16 @@ void cmian(void){
 	boxfill8(vram, xsize, COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
+	#endif
 
-   	//draw rectange
-	/*
+    #ifdef DRAW_RECT	
 	boxfill8(vram , xsize ,COL8_FF0000 , 20 ,20 ,120 ,120 );
    	boxfill8(vram , xsize ,COL8_00FF00 , 70 ,50 ,170 ,150 );
    	boxfill8(vram , xsize ,COL8_0000FF , 120 ,80 ,220 ,180 );
-	*/
+	#endif
 	
 	//draw 
-	/*
-	for (i = 0xa0000; i <= 0xaffff; i++) {
-        vram = (char*)i;
-        *vram = i & 0x0f;  
-    }
-	*/
+	
 	for(;;) {
 		io_hlt();
 	}
