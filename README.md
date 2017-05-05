@@ -1,4 +1,4 @@
-# green_os
+# green_os -- draw desktop 
 
 get source code 
 
