@@ -25,6 +25,7 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0,
 int x1, int y1);
+void putfont(unsigned char* vram ,int xsize , unsigned char c, int x, int y , char* fp) ; 
 
 void cmian(void){
 	int i ; 
@@ -34,14 +35,6 @@ void cmian(void){
 	int xsize = 320 ;
 	int ysize = 200 ;
 
-	#ifdef DRAW_STRIPE 
-	for (i = 0xa0000; i <= 0xaffff; i++) {
-        vram = (char*)i;
-        *vram = i & 0x0f;  
-    }
-	#endif
-	
-	#ifdef DRAW_DESKTOP
 	boxfill8(vram, xsize, COL8_008484, 0, 0, xsize-1, ysize-29);
 	boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
 	boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
@@ -58,16 +51,28 @@ void cmian(void){
 	boxfill8(vram, xsize, COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
-	#endif
-
-    #ifdef DRAW_RECT	
-	boxfill8(vram , xsize ,COL8_FF0000 , 20 ,20 ,120 ,120 );
-   	boxfill8(vram , xsize ,COL8_00FF00 , 70 ,50 ,170 ,150 );
-   	boxfill8(vram , xsize ,COL8_0000FF , 120 ,80 ,220 ,180 );
-	#endif
-	
-	//draw 
-	
+	/** draw A
+	char 0x41
+	........
+	...**...
+	...**...
+	...**...
+	...**...
+	..*..*..
+	..*..*..
+	..*..*..
+	..*..*..
+	.******.
+	.*....*.
+	.*....*.
+	.*....*.
+	***..***
+	........
+	........
+	*/ 
+	char fp[] = {0x00 , 0x18 , 0x18 , 0x18 , 0x18, 0x24,0x24 ,0x24,0x24,0x7E,0x42,0x42,0x42 ,0xE7 ,0x00 ,0x00};
+	putfont(vram , xsize ,COL8_848484 , 0 , 0 ,fp );
+		
 	for(;;) {
 		io_hlt();
 	}
@@ -122,3 +127,23 @@ void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0, i
 	}
 
 }
+
+void putfont(unsigned char* vram ,int xsize , unsigned char color ,  int x, int y , char* font)
+{
+	//8 * 16
+	int len = 16 ;
+	while(len){
+		char c = *font++ ;
+		if(c & 0x80 ) vram[y*xsize + x + 0] = color ;
+		if(c & 0x40 ) vram[y*xsize + x + 1 ] = color ;
+		if(c & 0x20 ) vram[y*xsize + x + 2] = color ;
+		if(c & 0x10 ) vram[y*xsize + x + 3] = color ;
+		if(c & 0x08 ) vram[y*xsize + x + 4] = color ;
+		if(c & 0x04 ) vram[y*xsize + x + 5] = color ;
+		if(c & 0x02 ) vram[y*xsize + x + 6] = color ;
+		if(c & 0x01 ) vram[y*xsize + x + 7] = color ;
+		y++ ;
+		len--;
+	}
+	
+} 
