@@ -80,7 +80,7 @@ LABEL_SEG_CODE32:
 	
 	%include "_write_vga.asm"	
 	%include "kernel_lib.asm"
-
+	%include "sysFont.inc"
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
 [SECTION .gs]
 ALIGN 32

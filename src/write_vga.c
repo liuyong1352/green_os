@@ -16,7 +16,6 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
-
 void io_hlt();
 void init_palette(void);
 void io_cli(void);
@@ -26,6 +25,7 @@ void io_store_eflags(int eflags);
 void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0,
 int x1, int y1);
 void putfont(unsigned char* vram ,int xsize , unsigned char c, int x, int y , char* fp) ; 
+void drawFont(unsigned char* vram , int xsize , unsigned char c , int x , int y  , char f);
 
 void cmian(void){
 	int i ; 
@@ -71,8 +71,29 @@ void cmian(void){
 	........
 	*/ 
 	char fp[] = {0x00 , 0x18 , 0x18 , 0x18 , 0x18, 0x24,0x24 ,0x24,0x24,0x7E,0x42,0x42,0x42 ,0xE7 ,0x00 ,0x00};
-	putfont(vram , xsize ,COL8_848484 , 0 , 0 ,fp );
+//	putfont(vram , xsize ,COL8_848484 , 0 , 0 ,fp );
+
 		
+	extern char  systemFont[4096] ;
+	for(int i = 0 , p1 = 0 ,p2 = 0  ; i < 0xff ; ) {
+		
+		putfont(vram , xsize , COL8_848484 , p1 , p2 ,systemFont +  (i*16) );
+		
+		i++ ; 	
+		p1 = p1 + 8 ; 
+		if(!(i%32) ){
+			p1 = 0 ; 
+			p2 = p2+16 ;
+		}
+	}
+	putfont(vram , xsize , COL8_FFFFFF , 0 , 0 ,systemFont +  (0x41 *16) );
+	putfont(vram , xsize , COL8_FFFFFF , 8 , 0 ,systemFont +  (0x43 *16) );
+	putfont(vram , xsize , COL8_FFFFFF , 16 , 0 ,systemFont +  (0x42 *16) );
+	//putfont(vram , xsize , COL8_848484 , 50 , 20 ,systemFont +  (0x1c*16) );
+	//putfont(vram , xsize , COL8_848484 , 16 , 0 ,systemFont +  (0x18*16) );
+	//putfont(vram , xsize , COL8_848484 , 16+8 , 0 ,systemFont +  (0x17*16) );
+ //drawFont(vram , xsize ,COL8_848484 , 20 , 0 , 'A');
+			
 	for(;;) {
 		io_hlt();
 	}
@@ -131,19 +152,23 @@ void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0, i
 void putfont(unsigned char* vram ,int xsize , unsigned char color ,  int x, int y , char* font)
 {
 	//8 * 16
-	int len = 16 ;
-	while(len){
-		char c = *font++ ;
-		if(c & 0x80 ) vram[y*xsize + x + 0] = color ;
-		if(c & 0x40 ) vram[y*xsize + x + 1 ] = color ;
-		if(c & 0x20 ) vram[y*xsize + x + 2] = color ;
-		if(c & 0x10 ) vram[y*xsize + x + 3] = color ;
-		if(c & 0x08 ) vram[y*xsize + x + 4] = color ;
-		if(c & 0x04 ) vram[y*xsize + x + 5] = color ;
-		if(c & 0x02 ) vram[y*xsize + x + 6] = color ;
-		if(c & 0x01 ) vram[y*xsize + x + 7] = color ;
-		y++ ;
-		len--;
+	int i = 0 ; 
+	char* p ;	
+	for( ; i < 16  ; i ++ ) {
+		char c = font[i] ;
+		p = vram + (y + i ) *xsize  + x ;
+		if(c & 0x80 ) p[0] = color ;
+		if(c & 0x40 ) p[1] = color ;
+		if(c & 0x20 ) p[2] = color ;
+		if(c & 0x10 ) p[3] = color ;
+		if(c & 0x08 ) p[4] = color ;
+		if(c & 0x04 ) p[5] = color ;
+		if(c & 0x02 ) p[6] = color ;
+		if(c & 0x01 ) p[7] = color ;
 	}
 	
-} 
+}
+
+void drawFont(unsigned char* vram , int xsize , unsigned char c , int x , int y  , char f){
+   	
+}

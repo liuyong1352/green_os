@@ -15,34 +15,48 @@ struct font{
 	char cc[2] ;
 	char lf[2] ;
 	char text[CSIZE] ;
+//	char lf_end[2] ;
 	char end ; 
 };
 
 char *table = "0123456789ABCDEF";
+
+void println(char s[] , int len ) {
+
+	for(int i = 0 ; i < len ; i++ ) {
+		printf("%c", s[i]);
+	}
+	printf("\n");
+}
  
-int  convert(struct font* pfont , void* buf )
+int  convert(struct font* pfont , char* buf )
 {
+	
 	char c1 = pfont->cc[0] ;
 	char c2 = pfont->cc[1] ;
 	printf("%c%c\n" ,c1 , c2 );
-	for( int i = 0 ,j=0 ; i < 16 ; i++ , j++ ) {
+	println(pfont->text , CSIZE);
+	for( int i = 0 ,j=0 ; i < 16 ; i++  ) {
 		char ch0 = 0, ch1 = 0 ;
-		if(pfont->text[j++] == '*') ch0 |= 0x8  ;
-		if(pfont->text[j++] == '*') ch0 |= 0x4  ;
-		if(pfont->text[j++] == '*') ch0 |= 0x2  ;
-		if(pfont->text[j++] == '*') ch0 |= 0x1  ;
-		if(pfont->text[j++] == '*') ch1 |= 0x8  ;
-		if(pfont->text[j++] == '*') ch1 |= 0x4  ;
-		if(pfont->text[j++] == '*') ch1 |= 0x2  ;
-		if(pfont->text[j++] == '*') ch1 |= 0x1  ;
-	    *(((char*)buf) + i*4 + 0) = table[ch0] ;
-		*(((char*)buf) + i*4 + 1) = table[ch1] ;
-		*(((char*)buf) + i*4 + 2) = 'H' ;
-		*(((char*)buf) + i*4 + 3) = ',' ;
- 		
-	   //	printf("0x%c%c ", table[ch0] ,table[ch1] );
+		j = i * 10 ; 
+		println(pfont->text + j , 10 );
+		if(pfont->text[j+0] == '*') ch0 |= 0x8  ;
+		if(pfont->text[j+1] == '*') ch0 |= 0x4  ;
+		if(pfont->text[j+2] == '*') ch0 |= 0x2  ;
+		if(pfont->text[j+3] == '*') ch0 |= 0x1  ;
+		if(pfont->text[j+4] == '*') ch1 |= 0x8  ;
+		if(pfont->text[j+5] == '*') ch1 |= 0x4  ;
+		if(pfont->text[j+6] == '*') ch1 |= 0x2  ;
+		if(pfont->text[j+7] == '*') ch1 |= 0x1  ;
+	    
+		*(buf + i*5 + 0) = '0' ;
+	    *(buf + i*5 + 1) = table[ch0] ;
+		*(buf + i*5 + 2) = table[ch1] ;
+		*(buf + i*5 + 3) = 'H' ;
+		*(buf + i*5 + 4) = ',' ;
+ 		println(buf + i*5 , 5);	
 	}
-    //printf("\n");	
+//    printf("\n");	
 }
 
 int main(int argc , char *argv[]){
@@ -69,7 +83,8 @@ int main(int argc , char *argv[]){
 		
 	pfont.end = '\0'	;
 	int count = 0 ;
-	char xbuf[16*4] ;  
+
+	char xbuf[16*5] ;  
 	int of ; 
 	if(!(of =  open("sysFont.inc",O_WRONLY|O_CREAT)) ) {
 		printf("open or creat sysFont.inc fail \n" );
@@ -84,11 +99,10 @@ int main(int argc , char *argv[]){
 		temp = temp +  sSize + 2 ;	
 		memset(xbuf , 0 ,sizeof(xbuf));
 		convert(&pfont, xbuf) ;
-		xbuf[16*4 - 1 ] = '\n' ;
+		xbuf[16*5 - 1 ] = '\n' ;
 		write(of , "db " , 3) ; 
 		write(of , xbuf , sizeof(xbuf)) ; 
-		
-	//	printf("%s\n", xbuf);
+		println(xbuf , 16*5);	
 		count++ ;
 		//if(count == 4) 
 		//	break ;

@@ -1,6 +1,5 @@
-
 default:
-	make asm
+	make run
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 objconvAsm:write_vga.c
