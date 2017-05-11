@@ -6,13 +6,18 @@ install git and clone
 
 git install https://github.com/liuyong1352/green_os.git
 
+本次完成字体的生成 ， 字体的显示
+本次修改了 读取扇区数量 ， 增加了字体文件 ， 还蛮大
 
 ##Ubantu
-1. cd green_os/src
+制作字体文件
+1. cd green_os/src/MakeFont
+2. make 
 
-2. make run_drawStripe
-3. make run_drawRect
-4. make run_drawDesktop
+
+执行
+1. cd green_os/src
+2. make 
 
 
 以下是得到c语言对应的汇编代码
