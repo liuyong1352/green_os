@@ -1,4 +1,3 @@
-//gcc -m32 -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
 #define  COL8_000000  0
 #define  COL8_FF0000  1
 #define  COL8_00FF00  2
@@ -16,84 +15,48 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
+typedef unsigned char uchar ;
+
 void io_hlt();
 void init_palette(void);
 void io_cli(void);
 void io_out8(int port , int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
-void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0,
-int x1, int y1);
-void putfont(unsigned char* vram ,int xsize , unsigned char c, int x, int y , char* fp) ; 
-void drawFont(unsigned char* vram , int xsize , unsigned char c , int x , int y  , char f);
+void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
+void putfont( unsigned char c, int x, int y , char* fp) ; 
+void drawFont( unsigned char c , int x , int y  , char f);
+void showString(uchar c , int , int y , char* s) ;
+
+extern char systemFont[4096] ;
+char* vram = (char*)0xa0000 ; 
+int xsize  = 320 ;
+int ysize  = 200 ; 
 
 void cmian(void){
-	int i ; 
-	char* vram = (char*)0xa0000 ;
-	init_palette();
-	//destop
-	int xsize = 320 ;
-	int ysize = 200 ;
-
-	boxfill8(vram, xsize, COL8_008484, 0, 0, xsize-1, ysize-29);
-	boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
-	boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
-	boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
-
-	boxfill8(vram, xsize, COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
-	boxfill8(vram, xsize, COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
-	boxfill8(vram, xsize, COL8_848484, 4, ysize - 4 , 59, ysize-4);
-	boxfill8(vram, xsize, COL8_848484, 59, ysize - 23 , 59, ysize-5);
-	boxfill8(vram, xsize, COL8_000000, 2, ysize - 3 , 59, ysize-3);
-	boxfill8(vram, xsize, COL8_000000, 60, ysize - 24 , 60, ysize-3);
 	
-	boxfill8(vram, xsize, COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
-	boxfill8(vram, xsize, COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
-	boxfill8(vram, xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
-	boxfill8(vram, xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
-	/** draw A
-	char 0x41
-	........
-	...**...
-	...**...
-	...**...
-	...**...
-	..*..*..
-	..*..*..
-	..*..*..
-	..*..*..
-	.******.
-	.*....*.
-	.*....*.
-	.*....*.
-	***..***
-	........
-	........
-	*/ 
-	char fp[] = {0x00 , 0x18 , 0x18 , 0x18 , 0x18, 0x24,0x24 ,0x24,0x24,0x7E,0x42,0x42,0x42 ,0xE7 ,0x00 ,0x00};
-//	putfont(vram , xsize ,COL8_848484 , 0 , 0 ,fp );
+	init_palette();
 
-		
-	extern char  systemFont[4096] ;
-	for(int i = 0 , p1 = 0 ,p2 = 0  ; i < 0xff ; ) {
-		
-		putfont(vram , xsize , COL8_848484 , p1 , p2 ,systemFont +  (i*16) );
-		
-		i++ ; 	
-		p1 = p1 + 8 ; 
-		if(!(i%32) ){
-			p1 = 0 ; 
-			p2 = p2+16 ;
-		}
-	}
-	putfont(vram , xsize , COL8_FFFFFF , 0 , 0 ,systemFont +  (0x41 *16) );
-	putfont(vram , xsize , COL8_FFFFFF , 8 , 0 ,systemFont +  (0x43 *16) );
-	putfont(vram , xsize , COL8_FFFFFF , 16 , 0 ,systemFont +  (0x42 *16) );
-	//putfont(vram , xsize , COL8_848484 , 50 , 20 ,systemFont +  (0x1c*16) );
-	//putfont(vram , xsize , COL8_848484 , 16 , 0 ,systemFont +  (0x18*16) );
-	//putfont(vram , xsize , COL8_848484 , 16+8 , 0 ,systemFont +  (0x17*16) );
- //drawFont(vram , xsize ,COL8_848484 , 20 , 0 , 'A');
-			
+	boxfill8( COL8_008484, 0, 0, xsize-1, ysize-29);
+	boxfill8( COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
+	boxfill8( COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
+	boxfill8( COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
+
+	boxfill8( COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
+	boxfill8( COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
+	boxfill8( COL8_848484, 4, ysize - 4 , 59, ysize-4);
+	boxfill8( COL8_848484, 59, ysize - 23 , 59, ysize-5);
+	boxfill8( COL8_000000, 2, ysize - 3 , 59, ysize-3);
+	boxfill8( COL8_000000, 60, ysize - 24 , 60, ysize-3);
+	
+	boxfill8( COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
+	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
+	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
+	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
+
+	showString(COL8_FFFFFF , 16 , 16 , "hello green os !");
+	showString(COL8_FFFFFF , 8 , 0 , "welcome !");
+	
 	for(;;) {
 		io_hlt();
 	}
@@ -136,21 +99,17 @@ void init_palette(void){
 
 }
 
-void boxfill8(unsigned char *vram,int xsize,  unsigned char c, int x0, int y0, int x1 , int y1)
-{
+void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
 	int x, y ;
-	for(y = y0 ; y <= y1 ; y++ )
-	{
-		for(x = x0 ; x <= x1 ; x++)
-		{
+	for(y = y0 ; y <= y1 ; y++ ){
+		for(x = x0 ; x <= x1 ; x++){
 			vram[y*xsize + x] = c ; 
 		}
 	}
 
 }
 
-void putfont(unsigned char* vram ,int xsize , unsigned char color ,  int x, int y , char* font)
-{
+void putfont(unsigned char color ,  int x, int y , char* font){
 	//8 * 16
 	int i = 0 ; 
 	char* p ;	
@@ -169,6 +128,15 @@ void putfont(unsigned char* vram ,int xsize , unsigned char color ,  int x, int 
 	
 }
 
-void drawFont(unsigned char* vram , int xsize , unsigned char c , int x , int y  , char f){
-   	
+void drawFont( unsigned char c , int x , int y  , char f){
+	putfont( c , x , y , systemFont + f * 16 );   	
 }
+
+void showString(uchar color , int x ,int y , char* pf ){
+	for(; *pf != '\0' ; pf++ ) {
+		drawFont(color , x , y ,*pf);
+		x = x + 8 ; 
+	}
+}
+
+
