@@ -27,6 +27,7 @@ void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 void putfont( unsigned char c, int x, int y , char* fp) ; 
 void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int , int y , char* s) ;
+void init_mouse(char* mouse , char bc) ;
 
 extern char systemFont[4096] ;
 char* vram = (char*)0xa0000 ; 
@@ -139,4 +140,31 @@ void showString(uchar color , int x ,int y , char* pf ){
 	}
 }
 
+void init_mouse(char* mouse , char bc) {
+	static char cursor[16][16] = {
+         "**************..",
+         "*OOOOOOOOOOO*...",
+         "*OOOOOOOOOO*....",
+         "*OOOOOOOOO*.....",
+         "*OOOOOOOO*......",
+         "*OOOOOOO*.......",
+         "*OOOOOOO*.......",
+         "*OOOOOOOO*......",
+         "*OOOO**OOO*.....",
+         "*OOO*..*OOO*....",
+         "*OO*....*OOO*...",
+         "*O*......*OOO*..",
+         "**........*OOO*.",
+         "*..........*OOO*",
+         "............*OO*",
+         ".............***"
+    };
+	for(int y = 0 ; y < 16 ; y++ ){
+		for(int x = 0 ; x < 16 ; x++ ){
+			if(cursor[y][x] == '*') mouse[y * 16 + x] = COL8_000000 ; 
+			if(cursor[y][x] == 'O') mouse[y * 16 + x] = COL8_FFFFFF ; 
+			if(cursor[y][x] == '.') mouse[y * 16 + x] = bc ; 
+		}
+	}
 
+}
