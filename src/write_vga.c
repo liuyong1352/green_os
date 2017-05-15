@@ -28,11 +28,12 @@ void putfont( unsigned char c, int x, int y , char* fp) ;
 void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
-
+void putblock(int px , int py , char *buf);
 extern char systemFont[4096] ;
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
+
 
 void cmian(void){
 	
@@ -54,10 +55,9 @@ void cmian(void){
 	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
 	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
 	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
-
-	showString(COL8_FFFFFF , 16 , 16 , "hello green os !");
-	showString(COL8_FFFFFF , 8 , 0 , "welcome !");
-	
+	char mouse[16*16] ; 
+	init_mouse(mouse , COL8_008484) ;	
+	putblock(20 , 20 , mouse);
 	for(;;) {
 		io_hlt();
 	}
@@ -166,5 +166,14 @@ void init_mouse(char* mouse , char bc) {
 			if(cursor[y][x] == '.') mouse[y * 16 + x] = bc ; 
 		}
 	}
+
+}
+
+void putblock(int px , int py , char *buf) {
+	for(int y = 0 ; y < 16  ; y++ ){
+		for(int x = 0 ; x < 16 ; x++ ) {
+			vram[( y + py )*xsize + x + px ] = buf[y * 16 + x] ; 
+		}
+	}	
 
 }
