@@ -1,4 +1,8 @@
-img:helloos.asm Makefile
-	nasm helloos.asm -o greenos.img
-run:greenos.img
-	qemu-system-i386 -drive file=greenos.img,format=raw,index=0,media=disk
+default:
+	make run 
+img:greenos.asm Makefile
+	nasm greenos.asm -o zImg
+run:img
+	qemu-system-i386 -drive file=zImg,format=raw,index=0,if=floppy
+clean:
+	rm -f zImg	
