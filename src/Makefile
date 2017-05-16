@@ -1,10 +1,9 @@
-
 default:
 	make asm
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 	
-asm:greenos.asm kernel.asm  Makefile
+asm:greenos.asm   Makefile
 	nasm greenos.asm -o boot
 img:asm boot imgTool  Makefile
 	dd if=/dev/zero of=zImg bs=512 count=2880
