@@ -29,11 +29,15 @@ void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
+void intHandlerFromC(char *esp);
+
 extern char systemFont[4096] ;
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
 
+//cursor
+static char _cursor[16 * 16] ; 
 
 void cmian(void){
 	
@@ -55,9 +59,8 @@ void cmian(void){
 	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
 	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
 	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
-	char mouse[16*16] ; 
-	init_mouse(mouse , COL8_008484) ;	
-	putblock(20 , 20 , mouse);
+	init_mouse( _cursor, COL8_008484) ;	
+	putblock(20 , 20 , _cursor);
 	for(;;) {
 		io_hlt();
 	}
@@ -176,4 +179,12 @@ void putblock(int px , int py , char *buf) {
 		}
 	}	
 
+}
+
+
+void intHandlerFromC(char *esp){
+	boxfill8(COL8_000000 , 0 , 0 , 32*8 - 1 , 15 ) ;
+	showString( 0 , 0 ,COL8_FFFFFF , "PS/2 keyboard");
+	for(;;){ io_hlt();}
+	
 }

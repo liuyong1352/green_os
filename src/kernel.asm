@@ -19,6 +19,15 @@ SelectorVideo     equ   LABEL_DESC_VIDEO  - LABEL_GDT
 SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
 SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
+label_idt:
+%rep 255
+	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
+%endrep
+
+idtlen    equ $ - label_idt
+idt_48:   dw idtlen - 1  ;idt limit= 0
+		  dd 0  ;idt base = 0L ; 
+
 [SECTION  .s16]
 [BITS  16]
 entry:
@@ -32,8 +41,38 @@ entry:
 	;switch vga
 	 mov al , 0x13
 	 mov ah , 0	
-	int 0x10
+     int 0x10
+	 ;reprogram the 8259's ,and it isn,t fun 
+	mov al , 0x11
+	out 0x20 ,al  ;send it to 8259-1
+	 
+ 	out 0xA0 , al ;and to 8259A-2
+	 
+	mov al , 0x20 
+	out 0x21, al 
 	
+	mov al , 0x28
+	out 0xA1 ,al 
+	
+	mov al , 0x04
+	out 0x21 , al
+	
+	mov al , 0x02
+	out 0xA1 , al
+	
+	;mov al , 0x01
+	mov al ,0x03
+	out 0x21 ,al
+	
+	out 0xA1 ,al
+
+	;mov al , 0xFF
+	mov al , 11111101b ; 允许键盘中断
+	out 0x21 , al
+	mov al , 0xFF 
+	out 0xA1 , al
+	 	
+
      xor   eax, eax
      mov   ax,  cs
      shl   eax, 4
@@ -55,6 +94,7 @@ entry:
      add   eax,  LABEL_GDT
      mov   dword  [GdtPtr + 2], eax
 
+	 lidt [idt_48]
      lgdt  [GdtPtr]
 
      cli   ;关中断
@@ -78,8 +118,14 @@ LABEL_SEG_CODE32:
 	mov ax ,SelectorVram
 	mov ds , ax 
 	
+	sti
 	%include "_write_vga.asm"	
 	%include "kernel_lib.asm"
+	jmp $
+_SpuriousHandler:
+SpuriousHandler equ _SpuriousHandler - $$
+	call intHandlerFromC
+	iretd
 	%include "sysFont.inc"
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
 [SECTION .gs]
