@@ -13,6 +13,7 @@ img:asm boot kernel imgTool  Makefile
 	dd if=/dev/zero of=zImg bs=512 count=2880
 	./imgTool boot zImg 0 0 1
 	./imgTool kernel zImg 1 0 1
+	./imgTool hello.txt zImg 1 0 1
 run:img zImg
 	#qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
 	qemu-system-i386 -drive file=zImg,format=raw,index=0,if=floppy	
