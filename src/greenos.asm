@@ -31,8 +31,8 @@ readFloppy:
 	mov ah , 0x02  ;read disk secotrs
 	mov al , 16    ;number of sectors transferred 
 	mov dl , 0     ;drive number
-	mov dh , 0     ; head number
-	mov ch , 1     ; track number
+	mov dh , 1     ; head number
+	mov ch , 0     ; track number
 	mov cl , 1     ; secktor number
 	int 0x13	
 	
