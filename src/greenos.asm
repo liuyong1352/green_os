@@ -29,7 +29,7 @@ entry:
 readFloppy:
 	mov bx , LOAD_ADDR
 	mov ah , 0x02  ;read disk secotrs
-	mov al , 16    ;number of sectors transferred 
+	mov al , 18    ;number of sectors transferred 
 	mov dl , 0     ;drive number
 	mov dh , 1     ; head number
 	mov ch , 0     ; track number

@@ -8,7 +8,7 @@ LABEL_GDT:	    Descriptor        0,            0,                   0
 LABEL_DESC_CODE32:  Descriptor        0,            1,                 DA_C + DA_32
 LABEL_DESC_VIDEO:   Descriptor     0B8000h,         0ffffh,            DA_DRW
 LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRW
-LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRW + DA_32
+LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRWA + DA_32
 
 GdtLen     equ    $ - LABEL_GDT
 GdtPtr     dw     GdtLen - 1
@@ -20,7 +20,7 @@ SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
 SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
 label_idt:
-%rep 255
+%rep 120
 	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
 %endrep
 
@@ -45,30 +45,38 @@ entry:
 	 ;reprogram the 8259's ,and it isn,t fun 
 	mov al , 0x11
 	out 0x20 ,al  ;send it to 8259-1
-	 
+	dw 0xeb , 0xeb ;delay	 
  	out 0xA0 , al ;and to 8259A-2
-	 
+	dw 0xeb , 0xeb ;delay	 
 	mov al , 0x20 
 	out 0x21, al 
 	
+	dw 0xeb , 0xeb ;delay	 
+	 
 	mov al , 0x28
 	out 0xA1 ,al 
 	
+	dw 0xeb , 0xeb ;delay	 
 	mov al , 0x04
 	out 0x21 , al
 	
+	dw 0xeb , 0xeb ;delay	 
 	mov al , 0x02
 	out 0xA1 , al
 	
+	dw 0xeb , 0xeb ;delay	 
 	;mov al , 0x01
 	mov al ,0x03
 	out 0x21 ,al
 	
+	dw 0xeb , 0xeb ;delay	 
 	out 0xA1 ,al
 
+	dw 0xeb , 0xeb ;delay	 
 	;mov al , 0xFF
 	mov al , 11111101b ; 允许键盘中断
 	out 0x21 , al
+	dw 0xeb , 0xeb ;delay	 
 	mov al , 0xFF 
 	out 0xA1 , al
 	 	
@@ -94,11 +102,17 @@ entry:
      add   eax,  LABEL_GDT
      mov   dword  [GdtPtr + 2], eax
 
-	 lidt [idt_48]
      lgdt  [GdtPtr]
 
      cli   ;关中断
-
+	 ;prepare for loading IDT 
+	xor eax ,eax
+	mov ax ,ds 
+	shl eax , 4
+	add eax ,label_idt
+	mov dword [idt_48 + 2 ] ,eax 
+	lidt [idt_48]
+	
      in    al,  92h
      or    al,  00000010b
      out   92h, al

@@ -26,7 +26,7 @@ void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 void putfont( unsigned char c, int x, int y , char* fp) ; 
 void drawFont( unsigned char c , int x , int y  , char f);
-void showString(uchar c , int , int y , char* s) ;
+void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void intHandlerFromC(char *esp);
@@ -184,7 +184,6 @@ void putblock(int px , int py , char *buf) {
 
 void intHandlerFromC(char *esp){
 	boxfill8(COL8_000000 , 0 , 0 , 32*8 - 1 , 15 ) ;
-	showString( 0 , 0 ,COL8_FFFFFF , "PS/2 keyboard");
-	for(;;){ io_hlt();}
+	showString(COL8_FFFFFF,0 , 0 , "PS/2 keyboard");
 	
 }
