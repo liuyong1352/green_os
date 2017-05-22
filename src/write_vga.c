@@ -15,13 +15,16 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
+#define asm_cli 	__asm__ ("cli")
+#define asm_sti		__asm__ ("sti")
+#define asm_stihlt 	__asm__ ("sti;hlt")
+
+
 #define PORT_KEYDAT 0x60 
 
 typedef unsigned char uchar ;
 
-void io_hlt();
 void init_palette(void);
-void io_cli(void);
 void outb_p(int port , int data);
 unsigned char inb_p(int port);
 int io_load_eflags(void);
@@ -32,7 +35,7 @@ void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
-void intHandlerFromC(char *esp);
+//void intHandlerFromC(char *esp);
 void hex(char c , char* buf) ; 
 
 extern char systemFont[4096] ;
@@ -42,6 +45,12 @@ int ysize  = 200 ;
 
 //cursor
 static char _cursor[16 * 16] ; 
+
+struct KEYBUF {
+	unsigned char data , flag  ; 
+};
+
+static struct KEYBUF keybuf ; 
 
 void cmian(void){
 	
@@ -65,15 +74,27 @@ void cmian(void){
 	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 	init_mouse( _cursor, COL8_008484) ;	
 	putblock(20 , 20 , _cursor);
+	int pos = 0 ; 
 	for(;;) {
-		io_hlt();
+		asm_cli ; 
+		if(keybuf.flag) {
+			char i = keybuf.data ; 
+			keybuf.flag = 0 ;
+			asm_sti ;
+			char buf[3] = {0} ; 
+			toHex(i , buf) ; 
+			showString(COL8_000000 , pos , 0 , buf) ; 
+			pos += 16 ; 			
+		} else {
+			asm_stihlt ;
+		}
 	}
 }
 
 void set_palette(int start , int end , unsigned char* rgb) {
 	int i , eflags ;
 	eflags = io_load_eflags();
-	io_cli();
+	asm_cli;
 	outb_p(0x03c8 , start); //set palette number
 	for(i = start ; i <= end ; i++ ) {
 		outb_p(0x03c9,rgb[0]/4);
@@ -185,26 +206,19 @@ void putblock(int px , int py , char *buf) {
 
 }
 
-static int _kp = 0 ;
-void intHandlerFromC(char *esp){
-	_kp++ ;
-	static int pos = 0 ; 
+void toHex(char c , char* buf) {
+     char* _t = "0123456789ABCDEF" ;
+     *(buf + 0) = _t[(c >> 4)&0x0F];
+     *(buf + 1) = _t[c&0x0F];
+}
+
+
+void intHandlerFromC(int *esp){
 	outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕
-	unsigned char data = inb_p(0x60); //必须从0x60把数据读出来 ， 才会触发 下轮
-	if(_kp % 2) {
-		boxfill8(COL8_000000 , 0 , 0 , 32*8 - 1 , 15 ) ;
-		showString(COL8_FFFFFF,0 , 0 , "PS/2 keyboard");
-	} else {
-		boxfill8(COL8_848484 , 0 , 0 , 32*8 - 1 , 15 ) ;
-	}
-	char buf[5] = "0x00\0" ;
-	char low = data & 0x0F ;
-	char high =(data >> 4) & 0x0F; 
-	char* hexStr = "0123456789ABCDEF" ; 
-	*(buf + 2)  = hexStr[high] ;
-	*(buf + 3)  = hexStr[low] ;  
-	showString(COL8_000000 , pos , 32 , buf) ; 
+	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
+	if(keybuf.flag) 
+		return ;
 	
-	pos += 32 ;
-	return; 
+	keybuf.data = data ;
+	keybuf.flag = 1 ; 
 }
