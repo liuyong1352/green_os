@@ -3,10 +3,10 @@ io_hlt:		hlt
 	ret
 
 ;char io_in8(int port)
-io_in8:
-	mov edx , [esp + 4 ]
+inb_p:
+	mov edx , [esp + 4]
 	mov eax , 0 
-	in al ,dx 
+	in al , dx 
 	ret 
 
 io_in16:
@@ -19,7 +19,7 @@ io_in32:
     mov edx, [esp + 4]
     in  eax, dx
     ret
-io_out8:
+outb_p:
     mov edx, [esp + 4]
     mov al, [esp + 8]
     out dx, al

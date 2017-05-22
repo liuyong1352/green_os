@@ -15,12 +15,15 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
+#define PORT_KEYDAT 0x60 
+
 typedef unsigned char uchar ;
 
 void io_hlt();
 void init_palette(void);
 void io_cli(void);
-void io_out8(int port , int data);
+void outb_p(int port , int data);
+unsigned char inb_p(int port);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
@@ -30,6 +33,7 @@ void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void intHandlerFromC(char *esp);
+void hex(char c , char* buf) ; 
 
 extern char systemFont[4096] ;
 char* vram = (char*)0xa0000 ; 
@@ -70,11 +74,11 @@ void set_palette(int start , int end , unsigned char* rgb) {
 	int i , eflags ;
 	eflags = io_load_eflags();
 	io_cli();
-	io_out8(0x03c8 , start); //set palette number
+	outb_p(0x03c8 , start); //set palette number
 	for(i = start ; i <= end ; i++ ) {
-		io_out8(0x03c9,rgb[0]/4);
-		io_out8(0x03c9,rgb[1]/4);
-		io_out8(0x03c9,rgb[2]/4);
+		outb_p(0x03c9,rgb[0]/4);
+		outb_p(0x03c9,rgb[1]/4);
+		outb_p(0x03c9,rgb[2]/4);
 		rgb = rgb + 3 ;
 	}
 	io_store_eflags(eflags);
@@ -181,9 +185,26 @@ void putblock(int px , int py , char *buf) {
 
 }
 
-
+static int _kp = 0 ;
 void intHandlerFromC(char *esp){
-	boxfill8(COL8_000000 , 0 , 0 , 32*8 - 1 , 15 ) ;
-	showString(COL8_FFFFFF,0 , 0 , "PS/2 keyboard");
+	_kp++ ;
+	static int pos = 0 ; 
+	outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕
+	unsigned char data = inb_p(0x60); //必须从0x60把数据读出来 ， 才会触发 下轮
+	if(_kp % 2) {
+		boxfill8(COL8_000000 , 0 , 0 , 32*8 - 1 , 15 ) ;
+		showString(COL8_FFFFFF,0 , 0 , "PS/2 keyboard");
+	} else {
+		boxfill8(COL8_848484 , 0 , 0 , 32*8 - 1 , 15 ) ;
+	}
+	char buf[5] = "0x00\0" ;
+	char low = data & 0x0F ;
+	char high =(data >> 4) & 0x0F; 
+	char* hexStr = "0123456789ABCDEF" ; 
+	*(buf + 2)  = hexStr[high] ;
+	*(buf + 3)  = hexStr[low] ;  
+	showString(COL8_000000 , pos , 32 , buf) ; 
 	
+	pos += 32 ;
+	return; 
 }

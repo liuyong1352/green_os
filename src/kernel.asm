@@ -138,7 +138,20 @@ LABEL_SEG_CODE32:
 	jmp $
 _SpuriousHandler:
 SpuriousHandler equ _SpuriousHandler - $$
+	push es 
+	push ds 
+	pushad 
+	mov eax ,esp 
+	push eax 
+	mov ax ,ss 
+	mov ds , ax 
+	mov es , ax 
+	
 	call intHandlerFromC
+	pop eax 
+	popad
+	pop ds 
+	pop es 
 	iretd
 	%include "sysFont.inc"
 SegCode32Len   equ  $ - LABEL_SEG_CODE32

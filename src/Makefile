@@ -3,7 +3,7 @@ default:
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 objconvAsm:write_vga.c
-	gcc -DDRAW_DESKTOP -m32 -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
+	gcc -DDRAW_DESKTOP -m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
 	objconv -fnasm write_vga.o
 	python delUnusedSymbol.py 
 asm:objconvAsm _write_vga.asm greenos.asm kernel.asm  Makefile
