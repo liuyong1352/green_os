@@ -47,7 +47,8 @@ int ysize  = 200 ;
 static char _cursor[16 * 16] ; 
 
 struct KEYBUF {
-	unsigned char data , flag  ; 
+	unsigned char data[32] ;
+	int next_r,next_w , len  ; 
 };
 
 static struct KEYBUF keybuf ; 
@@ -76,18 +77,20 @@ void cmian(void){
 	putblock(20 , 20 , _cursor);
 	int pos = 0 ; 
 	for(;;) {
-		asm_cli ; 
-		if(keybuf.flag) {
-			char i = keybuf.data ; 
-			keybuf.flag = 0 ;
-			asm_sti ;
+		asm_cli ;
+		if(keybuf.len) {
+			char i  = keybuf.data[keybuf.next_r] ; 
+			keybuf.len-- ;
+			keybuf.next_r++ ; 
+			keybuf.next_r %= 32 ; 
+			asm_sti ; 	
 			char buf[3] = {0} ; 
 			toHex(i , buf) ; 
 			showString(COL8_000000 , pos , 0 , buf) ; 
 			pos += 16 ; 			
 		} else {
-			asm_stihlt ;
-		}
+		 	asm_stihlt ; 
+		} 
 	}
 }
 
@@ -216,9 +219,10 @@ void toHex(char c , char* buf) {
 void intHandlerFromC(int *esp){
 	outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕
 	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
-	if(keybuf.flag) 
+	if(keybuf.len >= 32) 
 		return ;
-	
-	keybuf.data = data ;
-	keybuf.flag = 1 ; 
+	keybuf.data[keybuf.next_w] = data ; 	
+	keybuf.len++ ;
+	keybuf.next_w++ ;
+	keybuf.next_w %= 32 ; 
 }
