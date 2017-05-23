@@ -5,7 +5,8 @@ jmp entry
 [SECTION .gdt]
 ;                                  段基址          段界限                属性
 LABEL_GDT:	    Descriptor        0,            0,                   0  
-LABEL_DESC_CODE32:  Descriptor        0,            1,                 DA_C + DA_32
+;LABEL_DESC_CODE32:  Descriptor        0,           SegCode32Len- 1,                 DA_C + DA_32
+LABEL_DESC_CODE32:  Descriptor        0,           0ffffffffh,                 DA_C + DA_32
 LABEL_DESC_VIDEO:   Descriptor     0B8000h,         0ffffh,            DA_DRW
 LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRW
 LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRWA + DA_32
@@ -20,7 +21,7 @@ SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
 SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
 label_idt:
-%rep 120
+%rep 256
 	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
 %endrep
 

@@ -82,7 +82,7 @@ void readToFloopy(char* fileName) {
 		cal(i , &h , &c,&s) ;
 		if(rsize < 512)
 			nsize =  rsize ; 
-		writeToFloopy(h ,c ,s ,buf ,nsize  )	;
+		writeToFloopy(h ,c ,s ,buf ,nsize  );
 	}
 	
 	free(buf);
@@ -128,8 +128,24 @@ int main(int argc , char *argv[])
 	void* pbuf ; 
 	int rsize = readFileToMem(argv[1], &pbuf);
 	printf("rsize = %d\n", rsize );
+	int n = rsize / 512 + (rsize % 512 == 0 ? 0:1)  ; 
+	int wsize = 512 ; 
+	for(int i = 0 ; i < n ; i++ ) {
+		if(i == (n-1)) {
+			wsize = rsize ; 
+		}
+		printf("count=%d\twrite to header=%d cylender=%d sector=%d wsize=%d\n ",i, m_header, cylender,sector_pos,wsize);
+		writeToFloopy(m_header,cylender,sector_pos,((char*)pbuf + (i*512)), wsize ) ;
+		sector_pos++ ;  
+		
+		if(sector_pos > 18 ){ 
+			sector_pos = 1 ;
+			cylender++ ; 
+		}
+		rsize -= 512 ; 
+	}
 	//write(1 , pbuf , rsize) ; 	
-	writeToFloopy(m_header , cylender , sector_pos , pbuf, rsize) ; 
+//	writeToFloopy(m_header , cylender , sector_pos , pbuf, rsize) ; 
 //	write(1 , floopy[m_header][cylender][sector_pos] , rsize) ; 
 	free(pbuf) ; 
 		

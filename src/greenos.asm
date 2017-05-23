@@ -1,8 +1,7 @@
 org 0x7C00 ;
 LOAD_ADDR equ 0x9000
-
 jmp entry
-	DB	0xeb,0x4e,0x90
+     	DB	0xeb,0x4e,0x90
 		DB		"greenos "
 		DW		512	
 		DB		1			
@@ -23,20 +22,25 @@ jmp entry
 		times	18		db 0    
 entry:	
 	mov ax , 0
+	mov ss , ax 
 	mov ds , ax 
 	mov es , ax 
-
-readFloppy:
+	
 	mov bx , LOAD_ADDR
+	mov ch , 0     ; track number
+readFloppy:
+	cmp byte [load_count]  , 0
+	je startKernel
 	mov ah , 0x02  ;read disk secotrs
 	mov al , 18    ;number of sectors transferred 
 	mov dl , 0     ;drive number
 	mov dh , 1     ; head number
-	mov ch , 0     ; track number
 	mov cl , 1     ; secktor number
 	int 0x13	
-	
+	dec byte [load_count] 
+	inc ch 
+startKernel:
 	jmp LOAD_ADDR
-
+load_count  DB 2 
 	times	0x1fe-($ - $$) db 0 ;
 	DB		0x55, 0xaa

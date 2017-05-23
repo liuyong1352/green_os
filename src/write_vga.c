@@ -15,11 +15,12 @@
 #define  COL8_008484  14
 #define  COL8_848484  15
 
+
 #define asm_cli 	__asm__ ("cli")
 #define asm_sti		__asm__ ("sti")
 #define asm_stihlt 	__asm__ ("sti;hlt")
 
-
+#define FLAGS_OVERRUN 0x01 
 #define PORT_KEYDAT 0x60 
 
 typedef unsigned char uchar ;
@@ -35,8 +36,18 @@ void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
-//void intHandlerFromC(char *esp);
-void hex(char c , char* buf) ; 
+void toHex(char c , char* buf) ; 
+
+struct FIFO {
+	unsigned char* buf ;
+	int p , q , free ,size , flags ; 
+};
+
+int fifo_status(struct FIFO* fifo) ;
+void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
+
+int fifo_put(struct FIFO* fifo ,unsigned char data ) ;
+int fifo_get(struct FIFO* fifo );
 
 extern char systemFont[4096] ;
 char* vram = (char*)0xa0000 ; 
@@ -46,13 +57,16 @@ int ysize  = 200 ;
 //cursor
 static char _cursor[16 * 16] ; 
 
+static struct FIFO fifo  ;
+ 
+/*
 struct KEYBUF {
 	unsigned char data[32] ;
 	int next_r,next_w , len  ; 
 };
 
 static struct KEYBUF keybuf ; 
-
+*/
 void cmian(void){
 	
 	init_palette();
@@ -75,14 +89,13 @@ void cmian(void){
 	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 	init_mouse( _cursor, COL8_008484) ;	
 	putblock(20 , 20 , _cursor);
+	char keybuf[32] ;  
+	fifo_init(&fifo , 32 ,keybuf ) ;   
 	int pos = 0 ; 
 	for(;;) {
 		asm_cli ;
-		if(keybuf.len) {
-			char i  = keybuf.data[keybuf.next_r] ; 
-			keybuf.len-- ;
-			keybuf.next_r++ ; 
-			keybuf.next_r %= 32 ; 
+		if(fifo_status(&fifo)) {
+			char i  = fifo_get(&fifo); 
 			asm_sti ; 	
 			char buf[3] = {0} ; 
 			toHex(i , buf) ; 
@@ -219,10 +232,44 @@ void toHex(char c , char* buf) {
 void intHandlerFromC(int *esp){
 	outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕
 	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
-	if(keybuf.len >= 32) 
-		return ;
-	keybuf.data[keybuf.next_w] = data ; 	
-	keybuf.len++ ;
-	keybuf.next_w++ ;
-	keybuf.next_w %= 32 ; 
+	fifo_put(&fifo , data) ; 
+}
+
+int fifo_status(struct FIFO* fifo) {
+	return fifo->size  - fifo->free  ;
+}
+
+
+void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) {
+	
+	fifo->size	= size ;
+	fifo->buf	= buf ;
+	fifo->free	= size ; 
+	fifo->flags	= 0;
+	fifo->p 	= 0 ;
+	fifo->q 	= 0 ; 
+}
+
+int fifo_put(struct FIFO* fifo ,unsigned char data ) {
+	if(fifo->free == 0 ) {
+		fifo->flags |= FLAGS_OVERRUN ; 
+		return -1 ;	
+	}
+	fifo->buf[fifo->p] = data ;
+	fifo->p++ ;
+	fifo->p %= fifo->size ; 
+	fifo->free--;
+	return 0 ; 
+}
+
+int fifo_get(struct FIFO* fifo ){
+	int data ; 
+	if(fifo->free == fifo->size) {
+		return -1 ;
+	}
+	data = fifo->buf[fifo->q] ;
+	fifo->free++ ;
+	fifo->q++ ;
+	fifo->q %= fifo->size ; 
+	return data ; 
 }
