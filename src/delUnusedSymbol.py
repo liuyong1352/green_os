@@ -1,4 +1,3 @@
-
 file_obj = open("write_vga.asm")
 try:
 	list_of_all_the_lines = file_obj.readlines()

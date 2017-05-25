@@ -1,27 +1,4 @@
-#define  COL8_000000  0
-#define  COL8_FF0000  1
-#define  COL8_00FF00  2
-#define  COL8_FFFF00  3
-#define  COL8_0000FF  4
-#define  COL8_FF00FF  5
-#define  COL8_00FFFF  6
-#define  COL8_FFFFFF  7
-#define  COL8_C6C6C6  8
-#define  COL8_840000  9
-#define  COL8_008400  10
-#define  COL8_848400  11
-#define  COL8_000084  12
-#define  COL8_840084  13
-#define  COL8_008484  14
-#define  COL8_848484  15
-
-
-#define asm_cli 	__asm__ ("cli")
-#define asm_sti		__asm__ ("sti")
-#define asm_stihlt 	__asm__ ("sti;hlt")
-
-#define FLAGS_OVERRUN 0x01 
-#define PORT_KEYDAT 0x60 
+#include "write_vga.h"
 
 typedef unsigned char uchar ;
 
@@ -32,7 +9,6 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 void putfont( unsigned char c, int x, int y , char* fp) ; 
-void drawFont( unsigned char c , int x , int y  , char f);
 void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
@@ -42,6 +18,8 @@ struct FIFO {
 	unsigned char* buf ;
 	int p , q , free ,size , flags ; 
 };
+
+static struct FIFO* fifo ;
 
 int fifo_status(struct FIFO* fifo) ;
 void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
@@ -54,44 +32,21 @@ char* vram = (char*)0xa0000 ;
 int xsize  = 320 ;
 int ysize  = 200 ; 
 
-//cursor
 static char _cursor[16 * 16] ; 
-
-static struct FIFO fifo  ;
  
-/*
-struct KEYBUF {
-	unsigned char data[32] ;
-	int next_r,next_w , len  ; 
-};
-
-static struct KEYBUF keybuf ; 
-*/
 void cmian(void){
 	
 	init_palette();
-
-	boxfill8( COL8_008484, 0, 0, xsize-1, ysize-29);
-	boxfill8( COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
-	boxfill8( COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
-	boxfill8( COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
-
-	boxfill8( COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
-	boxfill8( COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
-	boxfill8( COL8_848484, 4, ysize - 4 , 59, ysize-4);
-	boxfill8( COL8_848484, 59, ysize - 23 , 59, ysize-5);
-	boxfill8( COL8_000000, 2, ysize - 3 , 59, ysize-3);
-	boxfill8( COL8_000000, 60, ysize - 24 , 60, ysize-3);
 	
-	boxfill8( COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
-	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
-	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
-	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
+	asm_sti ; 
+	init_keyboard();
+	init_screen() ; 
 	init_mouse( _cursor, COL8_008484) ;	
 	putblock(20 , 20 , _cursor);
+	enable_mouse();
+	
 	char keybuf[32] ;  
 	fifo_init(&fifo , 32 ,keybuf ) ;   
-	int pos = 0 ; 
 	for(;;) {
 		asm_cli ;
 		if(fifo_status(&fifo)) {
@@ -99,12 +54,25 @@ void cmian(void){
 			asm_sti ; 	
 			char buf[3] = {0} ; 
 			toHex(i , buf) ; 
-			showString(COL8_000000 , pos , 0 , buf) ; 
-			pos += 16 ; 			
+			printd(buf) ; 
 		} else {
 		 	asm_stihlt ; 
 		} 
 	}
+}
+
+
+void printd(char* s){
+	static int printd_x = 0 , printd_y = 0 ;
+	
+	for( ; *s !='\0' ; s++ ) {
+		drawFont(COL8_000000 , printd_x , printd_y , *s) ; 
+		printd_x += 8 ; 
+		if(printd_x == 320 ) {
+			printd_x = 0 ;
+			printd_y += 16 ;
+		}		
+	} 
 }
 
 void set_palette(int start , int end , unsigned char* rgb) {
@@ -229,12 +197,6 @@ void toHex(char c , char* buf) {
 }
 
 
-void intHandlerFromC(int *esp){
-	outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕
-	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
-	fifo_put(&fifo , data) ; 
-}
-
 int fifo_status(struct FIFO* fifo) {
 	return fifo->size  - fifo->free  ;
 }
@@ -272,4 +234,62 @@ int fifo_get(struct FIFO* fifo ){
 	fifo->q++ ;
 	fifo->q %= fifo->size ; 
 	return data ; 
+}
+
+void wait_KBC_sendready(){
+	for(;;){
+		if((inb_p(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0 ) 
+			break ;
+	}
+}
+
+void init_keyboard(){
+	wait_KBC_sendready();
+	outb_p(PORT_KEYCMD , KEYCMD_WRITE_MODE);
+	wait_KBC_sendready();
+	outb_p(PORT_KEYDAT , KBC_MODE);
+}
+
+void enable_mouse(){
+	wait_KBC_sendready();
+	outb_p(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE) ;
+	wait_KBC_sendready();
+	outb_p(PORT_KEYDAT , MOUSECMD_ENABLE) ; 	
+}
+
+void intHandlerFromC(int* esp){
+	//outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
+	outb_p(0x20 , 0x21 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
+	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
+	fifo_put(&fifo , data) ; 
+}
+
+void intHandlerForMouse(int* esp) {
+	unsigned char data ;
+	outb_p(PIC1_OCW2 , 0x64) ;//通知PIC1 IRQ-12 的受理已完成
+	outb_p(PIC0_OCW2 , 0x62) ;//通知PIC0 IRQ_02 的受理已完成
+	data = inb_p(PORT_KEYDAT) ;
+	//can test printd
+    char buf[3] = {0} ; 
+	toHex(data , buf) ; 
+	printd(buf) ;
+}
+
+void init_screen(){
+	boxfill8( COL8_008484, 0, 0, xsize-1, ysize-29);
+	boxfill8( COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
+	boxfill8( COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
+	boxfill8( COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
+
+	boxfill8( COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
+	boxfill8( COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
+	boxfill8( COL8_848484, 4, ysize - 4 , 59, ysize-4);
+	boxfill8( COL8_848484, 59, ysize - 23 , 59, ysize-5);
+	boxfill8( COL8_000000, 2, ysize - 3 , 59, ysize-3);
+	boxfill8( COL8_000000, 60, ysize - 24 , 60, ysize-3);
+	
+	boxfill8( COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
+	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
+	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
+	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 }

@@ -25,6 +25,7 @@ objconv -fnasm  write_vga.o
 
 
 linux13:显示按键的扫码和断码
-
+linux14.0.0 激活鼠标
+linux14.0.1 增加printd函数显示字符串 ， 展示鼠标中断数据
 
 

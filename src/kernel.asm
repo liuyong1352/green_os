@@ -21,9 +21,16 @@ SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
 SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
 label_idt:
-%rep 256
+%rep 33
 	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
 %endrep
+.21h:
+	Gate SelectorCode32 ,KeyBoardHandler , 0 , DA_386IGate
+%rep 10
+	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
+%endrep
+.2Ch:
+	Gate SelectorCode32 ,MouseHandler , 0 , DA_386IGate
 
 idtlen    equ $ - label_idt
 idt_48:   dw idtlen - 1  ;idt limit= 0
@@ -43,43 +50,48 @@ entry:
 	 mov al , 0x13
 	 mov ah , 0	
      int 0x10
+	
+	cli   ;关中断
 	 ;reprogram the 8259's ,and it isn,t fun 
 	mov al , 0x11
 	out 0x20 ,al  ;send it to 8259-1
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
  	out 0xA0 , al ;and to 8259A-2
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	mov al , 0x20 
 	out 0x21, al 
 	
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	 
 	mov al , 0x28
 	out 0xA1 ,al 
 	
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	mov al , 0x04
 	out 0x21 , al
 	
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	mov al , 0x02
 	out 0xA1 , al
 	
-	dw 0xeb , 0xeb ;delay	 
-	;mov al , 0x01
-	mov al ,0x03
+	dw 0xeb ,0xeb;delay	 
+	mov al , 0x01
+	;mov al ,0x03
 	out 0x21 ,al
 	
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	out 0xA1 ,al
 
-	dw 0xeb , 0xeb ;delay	 
+	dw 0xeb ,0xeb;delay	 
 	;mov al , 0xFF
-	mov al , 11111101b ; 允许键盘中断
-	out 0x21 , al
-	dw 0xeb , 0xeb ;delay	 
-	mov al , 0xFF 
-	out 0xA1 , al
+	;mov al , 11111101b ; 允许键盘中断
+	mov al , 11111001b ; 允许键盘中断
+	out 021h , al
+	dw 0xeb ,0xeb;delay	 
+	;mov al , 0xFF 
+	mov  al, 11101111b ;允许鼠标中断
+	out 0A1h , al
+	dw 0xeb ,0xeb
 	 	
 
      xor   eax, eax
@@ -105,7 +117,6 @@ entry:
 
      lgdt  [GdtPtr]
 
-     cli   ;关中断
 	 ;prepare for loading IDT 
 	xor eax ,eax
 	mov ax ,ds 
@@ -123,8 +134,8 @@ entry:
      mov   cr0, eax
 
      jmp   dword  SelectorCode32: 0
-
-     [SECTION .s32]
+     
+	[SECTION .s32]
      [BITS  32]
 LABEL_SEG_CODE32:
 	mov ax , SelectorStack
@@ -139,6 +150,9 @@ LABEL_SEG_CODE32:
 	jmp $
 _SpuriousHandler:
 SpuriousHandler equ _SpuriousHandler - $$
+	iretd
+_KeyBoardHandler:
+KeyBoardHandler equ _KeyBoardHandler - $$
 	push es 
 	push ds 
 	pushad 
@@ -154,6 +168,24 @@ SpuriousHandler equ _SpuriousHandler - $$
 	pop ds 
 	pop es 
 	iretd
+
+_MouseHandler:
+MouseHandler equ _MouseHandler - $$
+	push es 
+	push ds 
+	pushad 
+	mov eax ,esp 
+	push eax 
+	mov ax ,ss 
+	mov ds , ax 
+	mov es , ax 
+	
+	call intHandlerForMouse
+	pop eax 
+	popad
+	pop ds 
+	pop es
+	iretd 
 	%include "sysFont.inc"
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
 [SECTION .gs]
