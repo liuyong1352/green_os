@@ -9,7 +9,6 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 void putfont( unsigned char c, int x, int y , char* fp) ; 
-void showString(uchar c , int x , int y , char* s) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
@@ -19,7 +18,8 @@ struct FIFO {
 	int p , q , free ,size , flags ; 
 };
 
-static struct FIFO* fifo ;
+static struct FIFO keyfifo = {0};
+static struct FIFO mousefifo = {0} ; 
 
 int fifo_status(struct FIFO* fifo) ;
 void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
@@ -38,29 +38,70 @@ void cmian(void){
 	
 	init_palette();
 	
-	asm_sti ; 
+	static char keybuf[32] = {0};
+	static char mousebuf[128] = {0} ;  
+	fifo_init(&keyfifo , 32 ,keybuf ) ; 
+	fifo_init(&mousefifo , 128 , mousebuf) ;   
+	
 	init_keyboard();
+	
+	asm_sti ; 
 	init_screen() ; 
 	init_mouse( _cursor, COL8_008484) ;	
 	putblock(20 , 20 , _cursor);
 	enable_mouse();
+	struct MOUSE_DEC mdec ; 
+	mdec.phase = 0 ;
 	
-	char keybuf[32] ;  
-	fifo_init(&fifo , 32 ,keybuf ) ;   
 	for(;;) {
 		asm_cli ;
-		if(fifo_status(&fifo)) {
-			char i  = fifo_get(&fifo); 
+		if(fifo_status(&keyfifo)) {
+			char i  = fifo_get(&keyfifo); 
 			asm_sti ; 	
-			char buf[3] = {0} ; 
-			toHex(i , buf) ; 
-			printd(buf) ; 
-		} else {
+			printx(i) ; 
+		}else if (fifo_status(&mousefifo)){
+			char i  = fifo_get(&mousefifo); 
+			asm_sti ; 	
+			if(mouse_decode(&mdec , i)) {
+			 	
+				printx(mdec.buf[0]) ; 
+				printx(mdec.buf[1]) ; 
+				printx(mdec.buf[2]) ; 
+			}
+		}else {
 		 	asm_stihlt ; 
 		} 
 	}
 }
 
+int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) {
+	unsigned char phase = mdec->phase ; 
+	if(phase == 0 ) {
+		//等待鼠标的0xfa的阶段
+		if(dat == 0xfa ) {
+			mdec->phase = 1 ;
+		}
+		return 0 ;
+	}
+	if(phase == 1) {
+		mdec->buf[0] = dat ;
+		mdec->phase = 2 ;	
+		return 0 ; 
+	} 
+	if(phase == 2) {
+		mdec->buf[1] = dat ;
+		mdec->phase = 3 ;	
+		return 0 ; 
+	} 
+
+	if(phase == 3) {
+		mdec->buf[2] = dat ;
+		mdec->phase = 1 ;	
+		return 1 ; 
+	} 
+
+	return -1 ; //基本不可能来这里
+}
 
 void printd(char* s){
 	static int printd_x = 0 , printd_y = 0 ;
@@ -73,6 +114,12 @@ void printd(char* s){
 			printd_y += 16 ;
 		}		
 	} 
+}
+
+void printx(char c){
+	char buf[3] = {0} ; 
+	toHex(c , buf) ;
+	printd(buf) ; 	 	
 }
 
 void set_palette(int start , int end , unsigned char* rgb) {
@@ -143,13 +190,6 @@ void putfont(unsigned char color ,  int x, int y , char* font){
 
 void drawFont( unsigned char c , int x , int y  , char f){
 	putfont( c , x , y , systemFont + f * 16 );   	
-}
-
-void showString(uchar color , int x ,int y , char* pf ){
-	for(; *pf != '\0' ; pf++ ) {
-		drawFont(color , x , y ,*pf);
-		x = x + 8 ; 
-	}
 }
 
 void init_mouse(char* mouse , char bc) {
@@ -261,7 +301,7 @@ void intHandlerFromC(int* esp){
 	//outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
 	outb_p(0x20 , 0x21 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
 	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
-	fifo_put(&fifo , data) ; 
+	fifo_put(&keyfifo , data) ; 
 }
 
 void intHandlerForMouse(int* esp) {
@@ -269,10 +309,10 @@ void intHandlerForMouse(int* esp) {
 	outb_p(PIC1_OCW2 , 0x64) ;//通知PIC1 IRQ-12 的受理已完成
 	outb_p(PIC0_OCW2 , 0x62) ;//通知PIC0 IRQ_02 的受理已完成
 	data = inb_p(PORT_KEYDAT) ;
-	//can test printd
-    char buf[3] = {0} ; 
-	toHex(data , buf) ; 
-	printd(buf) ;
+    fifo_put(&mousefifo , data) ; 
+	//char buf[3] = {0} ; 
+	//toHex(data , buf) ; 
+	//printd(buf) ;
 }
 
 void init_screen(){

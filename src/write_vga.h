@@ -33,10 +33,17 @@
 #define asm_sti     __asm__ ("sti")	
 #define asm_stihlt  __asm__ ("sti;hlt")
 
+struct MOUSE_DEC {
+	unsigned char buf[3] , phase ;
+	int x , y , btn ;
+};
+
 void wait_KBC_sendready() ;
 void init_keyboard();
-void enable_mouse(); 
+void enable_mouse();
+int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) ;
 
 void init_screen();
 void drawFont(unsigned char col , int px , int py  , char c);
 void printd(char* s) ;
+void printx(char c) ;

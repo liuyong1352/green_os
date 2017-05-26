@@ -144,7 +144,7 @@ LABEL_SEG_CODE32:
 	mov ax ,SelectorVram
 	mov ds , ax 
 	
-	sti
+;	sti
 	%include "_write_vga.asm"	
 	%include "kernel_lib.asm"
 	jmp $
