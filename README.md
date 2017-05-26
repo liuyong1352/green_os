@@ -24,10 +24,10 @@ gcc -m32 -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
 objconv -fnasm  write_vga.o
 
 
-linux13:显示按键的扫码和断码
-linux14.0.0 激活鼠标
-linux14.0.1 增加printd函数显示字符串 ， 展示鼠标中断数据
-linux14.0.2 增加printx函数显示一个字符的16进制 ， 增加数据的结构体 ， 解析数据存放到结构体中
+* linux13:显示按键的扫码和断码
+* linux14.0.0 激活鼠标
+* linux14.0.1 增加printd函数显示字符串 ， 展示鼠标中断数据
+* linux14.0.2 增加printx函数显示一个字符的16进制 ， 增加数据的结构体 ， 解析数据存放到结构体中
 
 
 
