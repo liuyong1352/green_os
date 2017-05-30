@@ -48,7 +48,9 @@ void cmian(void){
 	asm_sti ; 
 	init_screen() ; 
 	init_mouse( _cursor, COL8_008484) ;	
-	putblock(20 , 20 , _cursor);
+	int mx = xsize / 2 ;
+	int my = ysize / 2 ;	
+	putblock(mx , my , _cursor);
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
@@ -63,10 +65,22 @@ void cmian(void){
 			char i  = fifo_get(&mousefifo); 
 			asm_sti ; 	
 			if(mouse_decode(&mdec , i)) {
-			 	
-				printx(mdec.buf[0]) ; 
-				printx(mdec.buf[1]) ; 
-				printx(mdec.buf[2]) ; 
+				boxfill8(COL8_008484,mx , my ,mx + 15 , my + 15) ;
+				mx += mdec.x ;
+				my += mdec.y ;
+				if(mx < 0 ) 
+					mx = 0 ;
+				if(my < 0 ) 
+					my = 0 ;
+				if(mx > xsize - 16 )
+					mx = xsize -16 ;
+				if(my > ysize - 16 ) 
+					my = ysize - 16 ;
+				putblock(mx , my , _cursor);
+ 				
+				//printx(mdec.buf[0]) ; 
+				//printx(mdec.buf[1]) ; 
+				//printx(mdec.buf[2]) ; 
 			}
 		}else {
 		 	asm_stihlt ; 
@@ -84,8 +98,13 @@ int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) {
 		return 0 ;
 	}
 	if(phase == 1) {
-		mdec->buf[0] = dat ;
-		mdec->phase = 2 ;	
+		//等待鼠标第一个字节的阶段 特点必须为00**1*** &  umask(11001000) ==  0000 1000
+		//移动范围在0-3 点击部分必须在8-F
+		if((dat & 0xc8) == 0x08) {
+			//first byte is correct
+			mdec->buf[0] = dat ;
+			mdec->phase = 2 ;	
+		}
 		return 0 ; 
 	} 
 	if(phase == 2) {
@@ -97,6 +116,14 @@ int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) {
 	if(phase == 3) {
 		mdec->buf[2] = dat ;
 		mdec->phase = 1 ;	
+		mdec->btn   = mdec->buf[0] & 0x07 ; 
+		mdec->x	= mdec->buf[1];
+		mdec->y	= mdec->buf[2];
+		if(mdec->buf[0] & 0x10)
+			mdec->x |= 0xffffff00;
+		if(mdec->buf[0] & 0x20 )
+			mdec->y |= 0xffffff00 ;	
+		mdec->y = -mdec->y ; //鼠标的y方向与画面符号相反
 		return 1 ; 
 	} 
 
