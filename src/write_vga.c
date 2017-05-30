@@ -33,6 +33,7 @@ int xsize  = 320 ;
 int ysize  = 200 ; 
 
 static char _cursor[16 * 16] ; 
+extern unsigned int smap_size ; 
  
 void cmian(void){
 	
@@ -54,7 +55,9 @@ void cmian(void){
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
-	
+	char pSmap[9] = {0};
+	int2hex(smap_size, pSmap) ;
+	printd(pSmap) ; 	
 	for(;;) {
 		asm_cli ;
 		if(fifo_status(&keyfifo)) {
@@ -261,6 +264,13 @@ void toHex(char c , char* buf) {
      char* _t = "0123456789ABCDEF" ;
      *(buf + 0) = _t[(c >> 4)&0x0F];
      *(buf + 1) = _t[c&0x0F];
+}
+void int2hex(int i , char* buf) {
+     	char* _t = "0123456789ABCDEF" ;
+     	for(int i = 0 ; i < 8 ; i++ ) {
+		int sbit = 4 * (7 - i ) ;
+     		*(buf + i) = _t[((i&(0x0000000F << sbit) ) >> sbit) & 0x0000000F] ; 
+	}
 }
 
 

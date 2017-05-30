@@ -5,8 +5,8 @@ jmp entry
 [SECTION .gdt]
 ;                                  段基址          段界限                属性
 LABEL_GDT:	    Descriptor        0,            0,                   0  
-;LABEL_DESC_CODE32:  Descriptor        0,           SegCode32Len- 1,                 DA_C + DA_32
-LABEL_DESC_CODE32:  Descriptor        0,           0ffffffffh,                 DA_C + DA_32
+LABEL_DESC_CODE32:  Descriptor        0,           SegCode32Len- 1,                 DA_C + DA_32
+;LABEL_DESC_CODE32:  Descriptor        0,           0ffffffffh,                 DA_C + DA_32
 LABEL_DESC_VIDEO:   Descriptor     0B8000h,         0ffffh,            DA_DRW
 LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRW
 LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRWA + DA_32
@@ -44,8 +44,31 @@ entry:
      mov   es, ax
      mov   ss, ax
      mov   sp, 0100h
-	
 
+;look up int 15h 
+SMAP_START:
+	mov ebx ,0   		;Continuation Contains the "continuation value" to get the 
+				;next run of physical memory ,This is the value returned by 
+				;a previous call to this routine.  If this is the first call,
+				;EBX must contain zero
+	mov di , smap_buf
+smap_loop:
+	mov eax , 0x0E820
+	mov ecx , 20 
+	mov edx , 0x0534D4150 	;'SMAP' -  Used by the BIOS to verify the
+			 	;caller is requesting the system map
+				;information to be returned in ES:DI.
+	int 0x15 
+	;Regs.eflags & EFLAG_CARRY
+	jc  smap_Error		;判断CF位，如果CF位设置为1，则表示出错
+	add di , 20
+	inc   dword [smap_size]
+	cmp ebx , 0 
+	jne smap_loop
+	jmp smap_end  
+smap_Error:
+	mov dword [smap_size] , 0 
+smap_end:
 	;switch vga
 	 mov al , 0x13
 	 mov ah , 0	
@@ -188,6 +211,10 @@ MouseHandler equ _MouseHandler - $$
 	iretd 
 	%include "sysFont.inc"
 SegCode32Len   equ  $ - LABEL_SEG_CODE32
+smap_buf: 
+	times 256 db 0
+smap_size:  
+	dd 0
 [SECTION .gs]
 ALIGN 32
 [BITS 32]

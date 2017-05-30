@@ -15,7 +15,7 @@ img:asm boot kernel imgTool  Makefile
 	./imgTool kernel zImg 1 0 1
 run:img zImg
 	#qemu-system-i386 -drive file=zImg,format=raw,index=0,media=disk
-	qemu-system-i386  -m 1024M -drive file=zImg,format=raw,index=0,if=floppy	
+	qemu-system-i386  -m 512M -drive file=zImg,format=raw,index=0,if=floppy	
 clean:
 	rm -f boot kernel imgTool zImg  *.o write_vga.asm _write_vga.asm
 	
