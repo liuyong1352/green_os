@@ -1,4 +1,5 @@
 #include "write_vga.h"
+#include "mm.h"
 
 typedef unsigned char uchar ;
 
@@ -35,6 +36,8 @@ int ysize  = 200 ;
 static char _cursor[16 * 16] ; 
 extern unsigned int smap_size ; 
  
+static int printd_x = 0 , printd_y = 0 ;
+
 void cmian(void){
 	
 	init_palette();
@@ -55,15 +58,20 @@ void cmian(void){
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
-	char pSmap[9] = {0};
-	int2hex(smap_size, pSmap) ;
-	printd(pSmap) ; 	
+//	char pSmap[9] = {0};
+	struct AddressRangeDes* memAddr = (struct AddressRangeDes*)get_smap_buf();
+//	int2hex(smap_size, pSmap) ;
+//	printd(pSmap) ; 	
+	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
 		if(fifo_status(&keyfifo)) {
 			char i  = fifo_get(&keyfifo); 
 			asm_sti ; 	
-			printx(i) ; 
+			if(i == 0x1C) {
+				showMemInfo(memAddr + count++) ;
+				count %= smap_size;
+			}
 		}else if (fifo_status(&mousefifo)){
 			char i  = fifo_get(&mousefifo); 
 			asm_sti ; 	
@@ -89,6 +97,30 @@ void cmian(void){
 		 	asm_stihlt ; 
 		} 
 	}
+}
+
+void showMemInfo(struct AddressRangeDes* addr ){
+	printd_x = 0 ;
+	printd_y = 0 ;
+	int x = 0 , y = 0 ;
+	boxfill8(COL8_008484, 0 , 0,xsize , 16*5);
+
+	char uf[9] = {0} ; 
+	printd("baseAddrLow:");
+	int2hex(addr->baseAddrLow, uf) ; 
+	printd(uf);
+	printd("\nbaseAddrHigh:");
+	int2hex(addr->baseAddrHigh, uf) ; 
+	printd(uf);
+	printd("\nlengthLow:");
+	int2hex(addr->lengthLow, uf) ; 
+	printd(uf);
+	printd("\nlengthHigh:");
+	int2hex(addr->lengthHigh, uf) ; 
+	printd(uf);
+	printd("\ntype:");
+	int2hex(addr->type, uf) ; 
+	printd(uf);
 }
 
 int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) {
@@ -134,10 +166,15 @@ int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) {
 }
 
 void printd(char* s){
-	static int printd_x = 0 , printd_y = 0 ;
 	
 	for( ; *s !='\0' ; s++ ) {
-		drawFont(COL8_000000 , printd_x , printd_y , *s) ; 
+		if(*s == '\n') {
+			printd_x = 0 ;
+			printd_y += 16 ;
+			continue;
+		} else {
+			drawFont(COL8_000000 , printd_x , printd_y , *s) ; 
+		}
 		printd_x += 8 ; 
 		if(printd_x == 320 ) {
 			printd_x = 0 ;
@@ -265,14 +302,16 @@ void toHex(char c , char* buf) {
      *(buf + 0) = _t[(c >> 4)&0x0F];
      *(buf + 1) = _t[c&0x0F];
 }
-void int2hex(int i , char* buf) {
-     	char* _t = "0123456789ABCDEF" ;
-     	for(int i = 0 ; i < 8 ; i++ ) {
-		int sbit = 4 * (7 - i ) ;
-     		*(buf + i) = _t[((i&(0x0000000F << sbit) ) >> sbit) & 0x0000000F] ; 
-	}
-}
 
+void int2hex(unsigned int i , char* buf) {
+     char* _t = "0123456789ABCDEF" ;
+     unsigned int mask = 0x0F ;
+     int pos  = 8 ; 
+     do {
+         buf[--pos] = _t[ i & mask] ;
+         i >>= 4 ; 
+    }while(pos) ;
+}
 
 int fifo_status(struct FIFO* fifo) {
 	return fifo->size  - fifo->free  ;

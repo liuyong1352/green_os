@@ -49,3 +49,7 @@ io_store_eflags:
     push eax
     popfd
     ret
+
+get_smap_buf:
+	mov eax , smap_buf
+	ret

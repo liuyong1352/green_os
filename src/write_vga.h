@@ -48,4 +48,4 @@ void drawFont(unsigned char col , int px , int py  , char c);
 void printd(char* s) ;
 void printx(char c) ;
 
-void int2hex(int i , char* buf) ;
+void int2hex(unsigned int i , char* buf) ;
