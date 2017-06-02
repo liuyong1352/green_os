@@ -1,5 +1,9 @@
+CC =gcc
+
 default:
 	make run
+obj:mm.c mm.h
+	$(CC) -m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -c mm.c
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 objconvAsm:write_vga.c
