@@ -41,6 +41,6 @@ readFloppy:
 	inc ch 
 startKernel:
 	jmp LOAD_ADDR
-load_count  DB 2 
+load_count  DB 3 
 	times	0x1fe-($ - $$) db 0 ;
 	DB		0x55, 0xaa

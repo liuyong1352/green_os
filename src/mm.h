@@ -3,7 +3,6 @@
 
 #define MEMMAN_FREES 4090 /*大约32KB*/
 
-char* get_smap_buf();
 
 struct AddressRangeDes {
 	unsigned int baseAddrLow ;
@@ -24,6 +23,10 @@ struct MEMMAN {
 	struct FREEINFO free[MEMMAN_FREES] ;
 };
 
+char* get_smap_buf();
 void showMemInfo(struct AddressRangeDes* addr );
+void memman_init(struct MEMMAN* man);
+unsigned int memman_total(struct MEMMAN* man) ; 
+unsigned int memman_alloc(struct MEMMAN* man , unsigned int size) ; 
 
 #endif

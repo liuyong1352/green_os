@@ -38,7 +38,14 @@ extern unsigned int smap_size ;
  
 static int printd_x = 0 , printd_y = 0 ;
 
-void cmian(void){
+void toHex(char c , char* buf) {
+     char* _t = "0123456789ABCDEF" ;
+     *(buf + 0) = _t[(c >> 4)&0x0F];
+     *(buf + 1) = _t[c&0x0F];
+}
+
+//void cmian(void){
+void cmain(void){
 	
 	init_palette();
 	
@@ -58,10 +65,7 @@ void cmian(void){
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
-//	char pSmap[9] = {0};
 	struct AddressRangeDes* memAddr = (struct AddressRangeDes*)get_smap_buf();
-//	int2hex(smap_size, pSmap) ;
-//	printd(pSmap) ; 	
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -297,12 +301,6 @@ void putblock(int px , int py , char *buf) {
 
 }
 
-void toHex(char c , char* buf) {
-     char* _t = "0123456789ABCDEF" ;
-     *(buf + 0) = _t[(c >> 4)&0x0F];
-     *(buf + 1) = _t[c&0x0F];
-}
-
 void int2hex(unsigned int i , char* buf) {
      char* _t = "0123456789ABCDEF" ;
      unsigned int mask = 0x0F ;
@@ -312,7 +310,6 @@ void int2hex(unsigned int i , char* buf) {
          i >>= 4 ; 
     }while(pos) ;
 }
-
 int fifo_status(struct FIFO* fifo) {
 	return fifo->size  - fifo->free  ;
 }

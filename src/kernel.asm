@@ -166,9 +166,12 @@ LABEL_SEG_CODE32:
 	mov esp , TopOfStack
 	mov ax ,SelectorVram
 	mov ds , ax 
+	mov ax ,SelectorVideo
+	mov gs ,ax 
 	
-;	sti
-	%include "_write_vga.asm"	
+	sti
+	call cmain
+	%include "_cmain.asm"	
 	%include "kernel_lib.asm"
 	jmp $
 _SpuriousHandler:
@@ -210,11 +213,11 @@ MouseHandler equ _MouseHandler - $$
 	pop es
 	iretd 
 	%include "sysFont.inc"
-SegCode32Len   equ  $ - LABEL_SEG_CODE32
 smap_buf: 
 	times 256 db 0
 smap_size:  
 	dd 0
+SegCode32Len   equ  $ - LABEL_SEG_CODE32
 [SECTION .gs]
 ALIGN 32
 [BITS 32]
