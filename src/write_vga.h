@@ -47,4 +47,4 @@ void init_screen();
 void drawFont(unsigned char col , int px , int py  , char c);
 void printd(char* s) ;
 void printx(char c) ;
-
+void int2hex(unsigned int x , char* buf) ;

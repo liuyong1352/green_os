@@ -170,7 +170,7 @@ LABEL_SEG_CODE32:
 	mov gs ,ax 
 	
 	sti
-	call cmain
+;	call cmain
 	%include "_cmain.asm"	
 	%include "kernel_lib.asm"
 	jmp $

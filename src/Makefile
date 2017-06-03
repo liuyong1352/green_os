@@ -6,7 +6,7 @@ obj:mm.c mm.h
 	$(CC) -m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -c  -o mm.o mm.c
 	$(CC) -DDRAW_DESKTOP -m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -c write_vga.c -o write_vga.o
 ld:obj mm.o write_vga.o
-	ld -m elf_i386 -r mm.o write_vga.o  -o cmain.o
+	ld -m elf_i386 -r  write_vga.o mm.o -o cmain.o
 tool:imgTool Makefile
 	gcc imgTool.c -o imgTool
 objconvAsm:ld cmain.o

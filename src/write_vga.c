@@ -38,12 +38,7 @@ extern unsigned int smap_size ;
  
 static int printd_x = 0 , printd_y = 0 ;
 
-void toHex(char c , char* buf) {
-     char* _t = "0123456789ABCDEF" ;
-     *(buf + 0) = _t[(c >> 4)&0x0F];
-     *(buf + 1) = _t[c&0x0F];
-}
-
+struct MEMMAN* memman = (struct MEMMAN*)0x100000;
 //void cmian(void){
 void cmain(void){
 	
@@ -66,6 +61,22 @@ void cmain(void){
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
 	struct AddressRangeDes* memAddr = (struct AddressRangeDes*)get_smap_buf();
+	//0x100000 0x1FEE0000
+ 	memman_init(memman);	
+	memman_free(memman , 0x00108000 , 0x1FE00000);
+	int mem_total = memman_total(memman) / (1024*1024) ; 
+	char buf[11] = {0} ; 
+	int2hex(mem_total , buf) ;
+	printd("total Mem: "); 
+	printd(buf) ;
+	printd("M");
+ 
+	memman_alloc(memman , 1024*1024*200) ; 
+	mem_total = memman_total(memman) / (1024*1024) ; 
+	int2hex(mem_total ,buf) ; 
+	printd("\n alloc after mem is: ");
+	printd(buf) ;
+	printd("M") ; 
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -101,6 +112,12 @@ void cmain(void){
 		 	asm_stihlt ; 
 		} 
 	}
+}
+
+void toHex(char c , char* buf) {
+     char* _t = "0123456789ABCDEF" ;
+     *(buf + 0) = _t[(c >> 4)&0x0F];
+     *(buf + 1) = _t[c&0x0F];
 }
 
 void showMemInfo(struct AddressRangeDes* addr ){
