@@ -32,5 +32,6 @@ objconv -fnasm  write_vga.o
 * linux14.0.3 解析鼠标中断，转化成对应的结构体， 使鼠标动起来
 * linux15.0.0 使用Int15中断 ，读取内存map ， 并展示map详细信息
 * linux15.0.1 整理文件，增加mm.c ,使用make链接多个文件，实现简单的内存管理算法
+* linux15.0.2 增加一次分配4k ， 测试分配算法正确性
 NOTE:
 [1] C 语言如果main方法前面有方法 ， 第一条指令不是main ，是按照ld 参数的顺序	

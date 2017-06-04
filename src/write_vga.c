@@ -1,5 +1,5 @@
-#include "write_vga.h"
-#include "mm.h"
+#include <write_vga.h>
+#include <mm.h>
 
 typedef unsigned char uchar ;
 
@@ -13,7 +13,7 @@ void putfont( unsigned char c, int x, int y , char* fp) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
-
+void testMem(struct MEMMAN* man) ;
 struct FIFO {
 	unsigned char* buf ;
 	int p , q , free ,size , flags ; 
@@ -64,19 +64,7 @@ void cmain(void){
 	//0x100000 0x1FEE0000
  	memman_init(memman);	
 	memman_free(memman , 0x00108000 , 0x1FE00000);
-	int mem_total = memman_total(memman) / (1024*1024) ; 
-	char buf[11] = {0} ; 
-	int2hex(mem_total , buf) ;
-	printd("total Mem: "); 
-	printd(buf) ;
-	printd("M");
- 
-	memman_alloc(memman , 1024*1024*200) ; 
-	mem_total = memman_total(memman) / (1024*1024) ; 
-	int2hex(mem_total ,buf) ; 
-	printd("\n alloc after mem is: ");
-	printd(buf) ;
-	printd("M") ; 
+	testMem(memman) ; 
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -113,6 +101,47 @@ void cmain(void){
 		} 
 	}
 }
+
+
+void printdTotalMem(struct MEMMAN* man) {
+
+	int M_UNIT = 1024 * 1024 ;
+	int mem_total = memman_total(memman) ; 
+	char buf[11] = {0} ; 
+	int2hex(mem_total/M_UNIT , buf) ;
+	printd("totalMem:"); 
+	printd(buf) ;
+	printd("M   ");
+	
+	int2hex(mem_total /1024 , buf) ; 
+	printd(buf);
+	printd("K\n");
+}
+
+void testMem(struct MEMMAN* man) {
+ 	printdTotalMem(man) ; 
+	unsigned int addr = memman_alloc(memman , 1024*1024*200) ; 
+	printd("After ");
+ 	printdTotalMem(man) ; 
+		
+	unsigned int addr1 = memman_alloc_4k(memman , 1) ; 
+	printd("After ");
+	printdTotalMem(man) ; 
+	unsigned int addr2 = memman_alloc_4k(memman , 1024*4 + 200) ; 
+	printd("After ");
+	printdTotalMem(man) ; 
+        
+	memman_free_4k(memman, addr1 , 1) ; 
+	printd("Ffter ");
+	printdTotalMem(man) ; 
+	memman_free_4k(memman, addr2 , 1024*4 + 200) ; 
+	printd("Ffter ");
+	printdTotalMem(man) ; 
+	memman_free(memman, addr , 1024*1024*200 ) ; 
+	printd("Ffter ");
+	printdTotalMem(man) ; 
+	
+}	
 
 void toHex(char c , char* buf) {
      char* _t = "0123456789ABCDEF" ;
