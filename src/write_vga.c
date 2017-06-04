@@ -1,14 +1,13 @@
 #include <write_vga.h>
-#include <mm.h>
 
 typedef unsigned char uchar ;
 
-void init_palette(void);
 void outb_p(int port , int data);
 unsigned char inb_p(int port);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
+void boxfill(char* buf , int bxsize , unsigned char c, int x0, int y0,int x1, int y1);
 void putfont( unsigned char c, int x, int y , char* fp) ; 
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
@@ -28,12 +27,11 @@ void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
 int fifo_put(struct FIFO* fifo ,unsigned char data ) ;
 int fifo_get(struct FIFO* fifo );
 
-extern char systemFont[4096] ;
+extern char systemFont[16] ;
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
 
-static char _cursor[16 * 16] ; 
 extern unsigned int smap_size ; 
  
 static int printd_x = 0 , printd_y = 0 ;
@@ -44,6 +42,7 @@ void cmain(void){
 	
 	init_palette();
 	
+	init_screen(vram , xsize , ysize) ; 
 	static char keybuf[32] = {0};
 	static char mousebuf[128] = {0} ;  
 	fifo_init(&keyfifo , 32 ,keybuf ) ; 
@@ -52,11 +51,8 @@ void cmain(void){
 	init_keyboard();
 	
 	asm_sti ; 
-	init_screen() ; 
-	init_mouse( _cursor, COL8_008484) ;	
 	int mx = xsize / 2 ;
 	int my = ysize / 2 ;	
-	putblock(mx , my , _cursor);
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
@@ -64,7 +60,25 @@ void cmain(void){
 	//0x100000 0x1FEE0000
  	memman_init(memman);	
 	memman_free(memman , 0x00108000 , 0x1FE00000);
-	testMem(memman) ; 
+	
+//	testMem(memman) ; 
+	
+	struct SHTCTL* shtctl ;
+	struct SHEET *sht_back , *sht_mouse ;
+        char buf_mouse[16*16] ;
+	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
+	shtctl = shtctl_init(memman , vram , xsize , ysize) ;
+	printi(shtctl->top) ; 
+//        sht_back = sheet_alloc(shtctl) ;
+	sht_mouse = sheet_alloc(shtctl) ; 	 	
+//	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , -1 );
+	sheet_setbuf(sht_mouse , buf_mouse , 16 ,16 , 99 );
+	//init_screen(buf_back , xsize , ysize) ; 
+	init_mouse( buf_mouse, 99) ;	
+	//sheet_updown(shtctl , sht_back , 0 ) ;
+	sheet_updown(shtctl , sht_mouse , 0) ;
+	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
+//	putblock(mx , my ,buf_mouse );
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -90,11 +104,8 @@ void cmain(void){
 					mx = xsize -16 ;
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
-				putblock(mx , my , _cursor);
+				putblock(mx , my , buf_mouse);
  				
-				//printx(mdec.buf[0]) ; 
-				//printx(mdec.buf[1]) ; 
-				//printx(mdec.buf[2]) ; 
 			}
 		}else {
 		 	asm_stihlt ; 
@@ -107,14 +118,10 @@ void printdTotalMem(struct MEMMAN* man) {
 
 	int M_UNIT = 1024 * 1024 ;
 	int mem_total = memman_total(memman) ; 
-	char buf[11] = {0} ; 
-	int2hex(mem_total/M_UNIT , buf) ;
-	printd("totalMem:"); 
-	printd(buf) ;
+	printd("TotalMem:"); 
+	printi(mem_total/M_UNIT) ;
 	printd("M   ");
-	
-	int2hex(mem_total /1024 , buf) ; 
-	printd(buf);
+	printi(mem_total/1024);	
 	printd("K\n");
 }
 
@@ -153,7 +160,7 @@ void showMemInfo(struct AddressRangeDes* addr ){
 	printd_x = 0 ;
 	printd_y = 0 ;
 	int x = 0 , y = 0 ;
-	boxfill8(COL8_008484, 0 , 0,xsize , 16*5);
+//	boxfill8(COL8_008484, 0 , 0,xsize , 16*5);
 
 	char uf[9] = {0} ; 
 	printd("baseAddrLow:");
@@ -232,7 +239,11 @@ void printd(char* s){
 		}		
 	} 
 }
-
+void printi(int i ) {
+	char uf[9] = {0} ; 
+	int2hex(i, uf) ; 
+	printd(uf) ; 
+}
 void printx(char c){
 	char buf[3] = {0} ; 
 	toHex(c , buf) ;
@@ -276,14 +287,17 @@ void init_palette(void){
 
 }
 
-void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
+void boxfill(char* buf , int bxsize  , unsigned char c, int x0, int y0,int x1, int y1){
+	
 	int x, y ;
 	for(y = y0 ; y <= y1 ; y++ ){
 		for(x = x0 ; x <= x1 ; x++){
-			vram[y*xsize + x] = c ; 
+			buf[y*bxsize + x] = c ; 
 		}
 	}
-
+}
+void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
+	boxfill(vram , xsize  , c , x0 , y0 , x1 , y1) ;
 }
 
 void putfont(unsigned char color ,  int x, int y , char* font){
@@ -434,21 +448,21 @@ void intHandlerForMouse(int* esp) {
 	//printd(buf) ;
 }
 
-void init_screen(){
-	boxfill8( COL8_008484, 0, 0, xsize-1, ysize-29);
-	boxfill8( COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
-	boxfill8( COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
-	boxfill8( COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
+void init_screen(char* buf  ,int xsize , int ysize  ){
+	boxfill( buf , xsize, COL8_008484, 0, 0, xsize-1, ysize-29);
+	boxfill( buf , xsize, COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
+	boxfill( buf , xsize, COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
+	boxfill( buf , xsize, COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
 
-	boxfill8( COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
-	boxfill8( COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
-	boxfill8( COL8_848484, 4, ysize - 4 , 59, ysize-4);
-	boxfill8( COL8_848484, 59, ysize - 23 , 59, ysize-5);
-	boxfill8( COL8_000000, 2, ysize - 3 , 59, ysize-3);
-	boxfill8( COL8_000000, 60, ysize - 24 , 60, ysize-3);
+	boxfill( buf , xsize, COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
+	boxfill( buf , xsize, COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
+	boxfill( buf , xsize, COL8_848484, 4, ysize - 4 , 59, ysize-4);
+	boxfill( buf , xsize, COL8_848484, 59, ysize - 23 , 59, ysize-5);
+	boxfill( buf , xsize, COL8_000000, 2, ysize - 3 , 59, ysize-3);
+	boxfill( buf , xsize, COL8_000000, 60, ysize - 24 , 60, ysize-3);
 	
-	boxfill8( COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
-	boxfill8( COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
-	boxfill8( COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
-	boxfill8( COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
+	boxfill( buf , xsize, COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
+	boxfill( buf , xsize, COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
+	boxfill( buf , xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
+	boxfill( buf , xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 }

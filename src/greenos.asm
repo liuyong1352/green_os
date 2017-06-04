@@ -38,9 +38,12 @@ readFloppy:
 	mov cl , 1     ; secktor number
 	int 0x13	
 	dec byte [load_count] 
-	inc ch 
+	inc ch
+	;note need add bx  and then jmp loop 
+	add bx , 512*18
+	jmp readFloppy 
 startKernel:
 	jmp LOAD_ADDR
-load_count  DB 3 
+load_count  DB 2 
 	times	0x1fe-($ - $$) db 0 ;
 	DB		0x55, 0xaa

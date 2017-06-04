@@ -1,3 +1,8 @@
+#include <mm.h>
+#include <sheet.h>
+#include <graphic.h>
+#include <std.h>
+
 #define FLAGS_OVERRUN 0x01
 #define  COL8_000000  0
 #define  COL8_FF0000  1
@@ -43,8 +48,6 @@ void init_keyboard();
 void enable_mouse();
 int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) ;
 
-void init_screen();
-void drawFont(unsigned char col , int px , int py  , char c);
-void printd(char* s) ;
-void printx(char c) ;
+void init_screen(char* buf , int bxsize , int bysize);
+void drawFont( unsigned char c , int x , int y  , char f);
 void int2hex(unsigned int x , char* buf) ;
