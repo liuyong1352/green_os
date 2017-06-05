@@ -16,11 +16,10 @@ struct SHTCTL* shtctl_init(struct MEMMAN* man , unsigned char* vram , int xsize 
 		ctl->sheets0[i].flags = 0 ;
 	}
 	 
-	printi(ctl->top) ; 
+	return ctl ;  
 }
 
 struct SHEET* sheet_alloc(struct SHTCTL* ctl ) {
-	printi((int)ctl->vram) ; 
 	for(int i = 0 ; i < MAX_SHEETS ; i++ ) {
 		if(ctl->sheets0[i].flags)
 			continue ;
@@ -48,10 +47,9 @@ void sheet_updown(struct SHTCTL* ctl , struct SHEET* sht , int height ) {
 	if(height < -1 )
 		height = -1 ;
 
-			printd("top->");
-			printi(ctl->top) ;
-			printd("\n"); 
-//	printi(ctl->top) ; 
+			//printd("top->");
+			//printi(ctl->top) ;
+			//printd("\n"); 
 	sht->height = height ;
 	if(old > height ) {
 		if(height >= 0 ) {
@@ -88,7 +86,6 @@ void sheet_updown(struct SHTCTL* ctl , struct SHEET* sht , int height ) {
 }
 
 void sheet_refresh(struct SHTCTL* ctl)  {
-	printi(ctl->top) ;
 
 	for(int h = 0 ; h <= ctl->top  ; h++ ) {
 		struct SHEET* sht = ctl->sheets[h] ; 

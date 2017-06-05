@@ -1,7 +1,7 @@
 #ifndef   _SHEET_H
 #define  _SHEET_H
 #include <mm.h>
-#define MAX_SHEETS 100
+#define MAX_SHEETS 114
 #define SHEET_USE 1 
 
 struct SHEET {

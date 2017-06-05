@@ -12,6 +12,7 @@ void putfont( unsigned char c, int x, int y , char* fp) ;
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
+void printTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
 struct FIFO {
 	unsigned char* buf ;
@@ -61,14 +62,28 @@ void cmain(void){
  	memman_init(memman);	
 	memman_free(memman , 0x00108000 , 0x1FE00000);
 	
-//	testMem(memman) ; 
+	//testMem(memman) ; 
 	
 	struct SHTCTL* shtctl ;
 	struct SHEET *sht_back , *sht_mouse ;
-        char buf_mouse[16*16] ;
-	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
+    char buf_mouse[16*16] ;
+	printdTotalMem(memman) ; 
 	shtctl = shtctl_init(memman , vram , xsize , ysize) ;
-	printi(shtctl->top) ; 
+
+	 
+	printd("shtctl address:");
+	printi((int)shtctl) ; 
+	printd("\n");
+
+	printdTotalMem(memman) ;
+	
+	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
+	
+	printd("shtbck address:");
+	printi((int)buf_back) ; 
+	printd("\n");
+
+	printdTotalMem(memman) ;
 //        sht_back = sheet_alloc(shtctl) ;
 	sht_mouse = sheet_alloc(shtctl) ; 	 	
 //	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , -1 );
@@ -77,7 +92,7 @@ void cmain(void){
 	init_mouse( buf_mouse, 99) ;	
 	//sheet_updown(shtctl , sht_back , 0 ) ;
 	sheet_updown(shtctl , sht_mouse , 0) ;
-	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
+//	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
 //	putblock(mx , my ,buf_mouse );
 	int count = 0 ; 	
 	for(;;) {
@@ -104,7 +119,8 @@ void cmain(void){
 					mx = xsize -16 ;
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
-				putblock(mx , my , buf_mouse);
+				sheet_slide(shtctl , sht_mouse , mx , my) ;
+				//putblock(mx , my , buf_mouse);
  				
 			}
 		}else {
