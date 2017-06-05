@@ -38,12 +38,10 @@ extern unsigned int smap_size ;
 static int printd_x = 0 , printd_y = 0 ;
 
 struct MEMMAN* memman = (struct MEMMAN*)0x100000;
-//void cmian(void){
 void cmain(void){
 	
 	init_palette();
 	
-	init_screen(vram , xsize , ysize) ; 
 	static char keybuf[32] = {0};
 	static char mousebuf[128] = {0} ;  
 	fifo_init(&keyfifo , 32 ,keybuf ) ; 
@@ -52,8 +50,8 @@ void cmain(void){
 	init_keyboard();
 	
 	asm_sti ; 
-	int mx = xsize / 2 ;
-	int my = ysize / 2 ;	
+	int mx = (xsize -16) / 2 ;
+	int my = (ysize - 16) / 2 ;	
 	enable_mouse();
 	struct MOUSE_DEC mdec ; 
 	mdec.phase = 0 ;
@@ -62,38 +60,23 @@ void cmain(void){
  	memman_init(memman);	
 	memman_free(memman , 0x00108000 , 0x1FE00000);
 	
-	//testMem(memman) ; 
-	
 	struct SHTCTL* shtctl ;
 	struct SHEET *sht_back , *sht_mouse ;
     char buf_mouse[16*16] ;
 	printdTotalMem(memman) ; 
 	shtctl = shtctl_init(memman , vram , xsize , ysize) ;
-
-	 
-	printd("shtctl address:");
-	printi((int)shtctl) ; 
-	printd("\n");
-
 	printdTotalMem(memman) ;
 	
 	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
-	
-	printd("shtbck address:");
-	printi((int)buf_back) ; 
-	printd("\n");
-
-	printdTotalMem(memman) ;
-//        sht_back = sheet_alloc(shtctl) ;
+	sht_back = sheet_alloc(shtctl) ;
 	sht_mouse = sheet_alloc(shtctl) ; 	 	
-//	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , -1 );
+	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , -1 );
 	sheet_setbuf(sht_mouse , buf_mouse , 16 ,16 , 99 );
-	//init_screen(buf_back , xsize , ysize) ; 
+	init_screen(buf_back , xsize , ysize) ; 
 	init_mouse( buf_mouse, 99) ;	
-	//sheet_updown(shtctl , sht_back , 0 ) ;
-	sheet_updown(shtctl , sht_mouse , 0) ;
-//	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
-//	putblock(mx , my ,buf_mouse );
+	sheet_updown(shtctl , sht_back , 0 ) ;
+	sheet_updown(shtctl , sht_mouse , 1) ;
+	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -120,7 +103,6 @@ void cmain(void){
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
 				sheet_slide(shtctl , sht_mouse , mx , my) ;
-				//putblock(mx , my , buf_mouse);
  				
 			}
 		}else {
