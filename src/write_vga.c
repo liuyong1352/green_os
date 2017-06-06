@@ -8,11 +8,11 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 void boxfill(char* buf , int bxsize , unsigned char c, int x0, int y0,int x1, int y1);
-void putfont( unsigned char c, int x, int y , char* fp) ; 
+
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
-void printTotalMem(struct MEMMAN* man) ; 
+void printdTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
 struct FIFO {
 	unsigned char* buf ;
@@ -28,7 +28,6 @@ void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
 int fifo_put(struct FIFO* fifo ,unsigned char data ) ;
 int fifo_get(struct FIFO* fifo );
 
-extern char systemFont[16] ;
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
@@ -63,20 +62,21 @@ void cmain(void){
 	struct SHTCTL* shtctl ;
 	struct SHEET *sht_back , *sht_mouse ;
     char buf_mouse[16*16] ;
-	printdTotalMem(memman) ; 
 	shtctl = shtctl_init(memman , vram , xsize , ysize) ;
-	printdTotalMem(memman) ;
 	
 	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
 	sht_back = sheet_alloc(shtctl) ;
 	sht_mouse = sheet_alloc(shtctl) ; 	 	
-	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , -1 );
+	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , 99 );
 	sheet_setbuf(sht_mouse , buf_mouse , 16 ,16 , 99 );
 	init_screen(buf_back , xsize , ysize) ; 
 	init_mouse( buf_mouse, 99) ;	
+	sheet_slide(shtctl , sht_back , 0 , 0 ) ; 
 	sheet_updown(shtctl , sht_back , 0 ) ;
 	sheet_updown(shtctl , sht_mouse , 1) ;
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
+	printdTotalMem(memman) ;
+	showString(shtctl , sht_back, 20 , ysize-16 , COL8_000000, "this is test!");
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -91,7 +91,6 @@ void cmain(void){
 			char i  = fifo_get(&mousefifo); 
 			asm_sti ; 	
 			if(mouse_decode(&mdec , i)) {
-				boxfill8(COL8_008484,mx , my ,mx + 15 , my + 15) ;
 				mx += mdec.x ;
 				my += mdec.y ;
 				if(mx < 0 ) 
@@ -155,9 +154,8 @@ void toHex(char c , char* buf) {
 }
 
 void showMemInfo(struct AddressRangeDes* addr ){
-	printd_x = 0 ;
-	printd_y = 0 ;
-	int x = 0 , y = 0 ;
+//	printd_x = 0 ;
+//	printd_y = 0 ;
 //	boxfill8(COL8_008484, 0 , 0,xsize , 16*5);
 
 	char uf[9] = {0} ; 
@@ -228,7 +226,7 @@ void printd(char* s){
 			printd_y += 16 ;
 			continue;
 		} else {
-			drawFont(COL8_000000 , printd_x , printd_y , *s) ; 
+			putfont(vram ,xsize,  printd_x ,printd_y ,COL8_000000 ,  *s);   	
 		}
 		printd_x += 8 ; 
 		if(printd_x == 320 ) {
@@ -296,29 +294,6 @@ void boxfill(char* buf , int bxsize  , unsigned char c, int x0, int y0,int x1, i
 }
 void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
 	boxfill(vram , xsize  , c , x0 , y0 , x1 , y1) ;
-}
-
-void putfont(unsigned char color ,  int x, int y , char* font){
-	//8 * 16
-	int i = 0 ; 
-	char* p ;	
-	for( ; i < 16  ; i ++ ) {
-		char c = font[i] ;
-		p = vram + (y + i ) *xsize  + x ;
-		if(c & 0x80 ) p[0] = color ;
-		if(c & 0x40 ) p[1] = color ;
-		if(c & 0x20 ) p[2] = color ;
-		if(c & 0x10 ) p[3] = color ;
-		if(c & 0x08 ) p[4] = color ;
-		if(c & 0x04 ) p[5] = color ;
-		if(c & 0x02 ) p[6] = color ;
-		if(c & 0x01 ) p[7] = color ;
-	}
-	
-}
-
-void drawFont( unsigned char c , int x , int y  , char f){
-	putfont( c , x , y , systemFont + f * 16 );   	
 }
 
 void init_mouse(char* mouse , char bc) {
@@ -441,9 +416,6 @@ void intHandlerForMouse(int* esp) {
 	outb_p(PIC0_OCW2 , 0x62) ;//通知PIC0 IRQ_02 的受理已完成
 	data = inb_p(PORT_KEYDAT) ;
     fifo_put(&mousefifo , data) ; 
-	//char buf[3] = {0} ; 
-	//toHex(data , buf) ; 
-	//printd(buf) ;
 }
 
 void init_screen(char* buf  ,int xsize , int ysize  ){

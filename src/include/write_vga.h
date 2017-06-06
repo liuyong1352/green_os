@@ -49,5 +49,4 @@ void enable_mouse();
 int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) ;
 
 void init_screen(char* buf , int bxsize , int bysize);
-void drawFont( unsigned char c , int x , int y  , char f);
 void int2hex(unsigned int x , char* buf) ;

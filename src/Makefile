@@ -2,12 +2,14 @@ CC =gcc
 CFLAGS =-m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -c -I include
 default:
 	make run
-obj:memory.c write_vga.c sheet.c 
+obj:memory.c write_vga.c sheet.c lib/delay.c graphic.c
 	$(CC) $(CFLAGS)  -o memory.o memory.c 
 	$(CC) $(CFLAGS) -DDRAW_DESKTOP  write_vga.c -o write_vga.o
 	$(CC) $(CFLAGS)  sheet.c -o sheet.o
+	$(CC) $(CFLAGS)  lib/delay.c -o delay.o
+	$(CC) $(CFLAGS)  graphic.c -o graphic.o
 ld:obj memory.o write_vga.o sheet.o
-	ld -m elf_i386 -r  write_vga.o sheet.o  memory.o  -o cmain.o
+	ld -m elf_i386 -r  write_vga.o sheet.o  memory.o delay.o graphic.o -o cmain.o
 tool:imgTool.c
 	$(CC) imgTool.c -o imgTool
 objconvAsm:ld cmain.o

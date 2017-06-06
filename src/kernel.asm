@@ -222,5 +222,5 @@ SegCode32Len   equ  $ - LABEL_SEG_CODE32
 ALIGN 32
 [BITS 32]
 LABEL_STACK:
-times 2048 db 0 
+times 4096 db 0 
 TopOfStack equ $- LABEL_STACK

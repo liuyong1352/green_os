@@ -89,6 +89,17 @@ void sheet_refresh(struct SHTCTL* ctl)  {
 
 	for(int h = 0 ; h <= ctl->top  ; h++ ) {
 		struct SHEET* sht = ctl->sheets[h] ; 
+		//delay(150000);
+/*
+		printi(sht->vx0 ); 
+		printi(" " ); 
+		printi(sht->vy0 ); 
+		printi(" " ); 
+		printi(sht->bxsize ); 
+		printi(" " ); 
+		printi(sht->bysize ); 
+		printi("\n " ); 
+*/
 		for(int by = 0 ; by < sht->bysize  ; by++ ) {
 			int vy = (sht->vy0 + by)  ; 
 			for(int bx = 0 ; bx < sht->bxsize ; bx++ ) {
@@ -102,10 +113,35 @@ void sheet_refresh(struct SHTCTL* ctl)  {
 	}
 }
 
+void sheet_refreshsub(struct SHTCTL* ctl , int vx0 , int vy0 , int vx1 , int vy1){
+
+	for(int h = 0 ; h <= ctl->top  ; h++ ) {
+		struct SHEET* sht = ctl->sheets[h] ;
+//		delay(150000);
+		for(int by = 0 ; by < sht->bysize  ; by++ ) {
+			int vy = (sht->vy0 + by)  ; 
+			for(int bx = 0 ; bx < sht->bxsize ; bx++ ) {
+				int vx = sht->vx0 + bx ; 
+				if(vx0 <= vx && vx < vx1 && vy0 <= vy && vy <= vy1) {
+					unsigned char c = sht->buf[by * sht->bxsize + bx]; 
+					if(c == sht->col_inv)
+						continue ;
+					ctl->vram[vy * ctl->xsize + vx ] = c; 
+				} 
+			}
+		}
+	}
+}
+
 void sheet_slide(struct SHTCTL* ctl , struct SHEET* sht, int vx0 ,int vy0) 
 {
+	int old_vx0 = sht->vx0  , old_vy0 = sht->vy0 ;  
 	sht->vx0 = vx0 ;
 	sht->vy0 = vy0 ;
-	if(sht->height >= 0) 
-		sheet_refresh(ctl);
+	if(sht->height >= 0) {
+		sheet_refresh(ctl) ;
+		sheet_refreshsub(ctl , old_vx0 , old_vy0 , old_vx0 + sht->bxsize , old_vy0 + sht->bysize);
+//		delay(150000);
+		sheet_refreshsub(ctl , vx0 , vy0 , vx0 + sht->bxsize , vy0 + sht->bysize);
+	}
 }
