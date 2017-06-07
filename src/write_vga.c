@@ -75,17 +75,22 @@ void cmain(void){
 	sheet_updown(shtctl , sht_back , 0 ) ;
 	sheet_updown(shtctl , sht_mouse , 1) ;
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
-	printdTotalMem(memman) ;
-	showString(shtctl , sht_back, 20 , ysize-16 , COL8_000000, "this is test!");
+	//printdTotalMem(memman) ;
+	char* buf[64] ; 
+	sprintf(buf ,"This is test 0x%x" , 100 ) ;  
+	showString(shtctl , sht_back, 20 , 0 , COL8_000000, buf);
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
 		if(fifo_status(&keyfifo)) {
 			char i  = fifo_get(&keyfifo); 
-			asm_sti ; 	
+			asm_sti ;
+			 	
 			if(i == 0x1C) {
-				showMemInfo(memAddr + count++) ;
-				count %= smap_size;
+				//showMemInfo(memAddr + count++) ;
+				//count %= smap_size;
+				sprintf(buf ,"This is test 0x%x %x" , count++ , 100 ) ;  
+				showString(shtctl , sht_back, 20 , ysize-16*count , COL8_000000, buf);
 			}
 		}else if (fifo_status(&mousefifo)){
 			char i  = fifo_get(&mousefifo); 

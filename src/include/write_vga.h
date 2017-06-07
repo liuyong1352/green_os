@@ -2,6 +2,7 @@
 #include <sheet.h>
 #include <graphic.h>
 #include <std.h>
+#include <kernel.h>
 
 #define FLAGS_OVERRUN 0x01
 #define  COL8_000000  0
