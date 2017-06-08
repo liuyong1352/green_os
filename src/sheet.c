@@ -17,18 +17,23 @@ struct SHTCTL* shtctl_init(struct MEMMAN* man , unsigned char* vram , int xsize 
 	 
 	return ctl ;  
 }
-/*
 
-struct SHEET* sheet_alloc(struct SHTCTL* ctl ) {
-	for(int i = 0 ; i < MAX_SHEETS ; i++ ) {
-		if(ctl->sheets0[i].flags)
-			continue ;
-		ctl->sheets0[i].flags = SHEET_USE ; // mark is used 
-		ctl->sheets0[i].height = -1 ; //invisiable 
-		return &ctl->sheets0[i];
-	}
-	return 0  ; 
+struct SHEET *sheet_alloc(struct SHTCTL *ctl) {
+    struct SHEET *sht;
+    int i;
+    for (i = 0; i < MAX_SHEETS; i++) {
+        if (ctl->sheets0[i].flags == 0) {
+            sht = &ctl->sheets0[i];
+            ctl->sheets[i] = sht;
+			sht->flags = SHEET_USE ; // mark is used 
+			sht->height = -1 ; //invisiable 
+            return sht;
+        }
+    }
+
+    return 0;
 }
+
 
 
 void sheet_setbuf(struct SHEET* sheet  , unsigned char* buf  , int bxsize , int bysize , int col_inv) {
@@ -37,6 +42,8 @@ void sheet_setbuf(struct SHEET* sheet  , unsigned char* buf  , int bxsize , int 
 	sheet->bysize = bysize ;
 	sheet->col_inv = col_inv ; 
 }
+
+/*
 void sheet_updown(struct SHTCTL* ctl , struct SHEET* sht , int height ) {
 	if(sht->height == height)
 		return ; 
@@ -176,32 +183,6 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
     }
 }
 */
-
-#define SHEET_USE  1
-struct SHEET *sheet_alloc(struct SHTCTL *ctl) {
-    struct SHEET *sht;
-    int i;
-    for (i = 0; i < MAX_SHEETS; i++) {
-        if (ctl->sheets0[i].flags == 0) {
-            sht = &ctl->sheets0[i];
-            ctl->sheets[i] = sht;
-            sht->flags = SHEET_USE;
-            sht->height = -1;
-            return sht;
-        }
-    }
-
-    return 0;
-}
-
-void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize,
-    int col_inv) {
-    sht->buf = buf;
-    sht->bxsize = xsize;
-    sht->bysize = ysize;
-    sht->col_inv = col_inv;
-    return;
-}
 
 void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
     int h, old = sht->height;

@@ -8,8 +8,6 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
 
-void init_mouse(char* mouse , char bc) ;
-void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
 void printdTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
@@ -49,21 +47,41 @@ void cmain(void){
 	memman_free(memman , 0x00108000 , 0x1FE00000);
 	
 	struct SHTCTL* shtctl ;
-	struct SHEET *sht_back , *sht_mouse ;
+	struct SHEET* sht_back ;
+	struct SHEET* sht_mouse ;
+	struct SHEET* sht_win;
     char buf_mouse[16*16] ;
+	char *buf_back , *buf_win;
 	shtctl = shtctl_init(memman , vram , xsize , ysize) ;
 	
-	unsigned char* buf_back = (unsigned char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
-	sht_back = sheet_alloc(shtctl) ;
-	sht_mouse = sheet_alloc(shtctl) ; 	 	
-	sheet_setbuf(sht_back , buf_back , xsize  ,ysize , 99 );
+	buf_back = (char*)memman_alloc_4k(memman , sizeof(xsize * ysize)) ;
+	buf_win  = (char*)memman_alloc_4k(memman , 160 * 68) ;
+
+	sht_back 	= sheet_alloc(shtctl) ;
+	sht_mouse 	= sheet_alloc(shtctl) ; 	 	
+	sht_win		= sheet_alloc(shtctl) ;
+
+	sheet_setbuf(sht_back ,	 buf_back , xsize  ,ysize , -1 );
 	sheet_setbuf(sht_mouse , buf_mouse , 16 ,16 , 99 );
+	sheet_setbuf(sht_win , 	 buf_win , 	160 ,68 , -1 );
+
 	init_screen(buf_back , xsize , ysize) ; 
 	init_mouse( buf_mouse, 99) ;	
+//	make_window8(buf_win , 160 ,68  , "window");
+
+//	showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
+//	showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
+
 	sheet_slide(shtctl , sht_back , 0 , 0 ) ; 
-	sheet_updown(shtctl , sht_back , 0 ) ;
-	sheet_updown(shtctl , sht_mouse , 1) ;
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
+	sheet_slide(shtctl , sht_win , mx , my) ; 	
+
+	sheet_updown(shtctl , sht_back , 0 ) ;
+	delay(150000);
+	sheet_updown(shtctl , sht_mouse , 1) ;
+	delay(150000);
+	showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
+//	sheet_updown(shtctl , sht_win , 2) ;
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
 /*
@@ -79,14 +97,12 @@ void cmain(void){
 	delay(400);
 	}
 */	
-	//init_screen(buf_back , xsize , ysize) ;
 	sprintf(buf ,"%x %x %x %x" , shtctl->xsize , shtctl->ysize,shtctl->top,(int)shtctl->vram) ;
-	showString(shtctl , sht_back, 0 , my , COL8_000000, buf);
+//	showString(shtctl , sht_back, 0 , my , COL8_000000, buf);
 	sprintf(buf ,"%x %x %x %x" , sht_back->bxsize , sht_back->bysize,sht_back->height,(int)sht_back->buf) ;
-	showString(shtctl , sht_back, 0 , my + 16 , COL8_000000, buf);
+//	showString(shtctl , sht_back, 0 , my + 16 , COL8_000000, buf);
 	sprintf(buf ,"%x %x %x %x" , sht_mouse->bxsize , sht_mouse->bysize,sht_mouse->height,(int)sht_mouse->buf) ;
-	showString(shtctl , sht_back, 0 , my + 32 , COL8_000000, buf);
-	//sheet_refresh(shtctl);
+//	showString(shtctl , sht_back, 0 , my + 32 , COL8_000000, buf);
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -98,7 +114,7 @@ void cmain(void){
 				//showMemInfo(memAddr + count++) ;
 				//count %= smap_size;
 				sprintf(buf ,"This is test 0x%x %x" , count++ , 100 ) ;  
-				showString(shtctl , sht_back, 20 , ysize-16*count , COL8_000000, buf);
+//				showString(shtctl , sht_back, 20 , ysize-16*count , COL8_000000, buf);
 			}
 		}else if (fifo_status(&mousefifo)){
 			char i  = fifo_get(&mousefifo); 
@@ -175,7 +191,6 @@ void toHex(char c , char* buf) {
 void showMemInfo(struct AddressRangeDes* addr ){
 //	printd_x = 0 ;
 //	printd_y = 0 ;
-//	boxfill8(COL8_008484, 0 , 0,xsize , 16*5);
 
 	char uf[9] = {0} ; 
 	printd("baseAddrLow:");
@@ -306,35 +321,9 @@ void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
 	boxfill(vram , xsize  , c , x0 , y0 , x1 , y1) ;
 }
 
-void init_mouse(char* mouse , char bc) {
-	static char cursor[16][16] = {
-         "**************..",
-         "*OOOOOOOOOOO*...",
-         "*OOOOOOOOOO*....",
-         "*OOOOOOOOO*.....",
-         "*OOOOOOOO*......",
-         "*OOOOOOO*.......",
-         "*OOOOOOO*.......",
-         "*OOOOOOOO*......",
-         "*OOOO**OOO*.....",
-         "*OOO*..*OOO*....",
-         "*OO*....*OOO*...",
-         "*O*......*OOO*..",
-         "**........*OOO*.",
-         "*..........*OOO*",
-         "............*OO*",
-         ".............***"
-    };
-	for(int y = 0 ; y < 16 ; y++ ){
-		for(int x = 0 ; x < 16 ; x++ ){
-			if(cursor[y][x] == '*') mouse[y * 16 + x] = COL8_000000 ; 
-			if(cursor[y][x] == 'O') mouse[y * 16 + x] = COL8_FFFFFF ; 
-			if(cursor[y][x] == '.') mouse[y * 16 + x] = bc ; 
-		}
-	}
 
-}
-
+/*
+void putblock(int px , int py , char *buf);
 void putblock(int px , int py , char *buf) {
 	for(int y = 0 ; y < 16  ; y++ ){
 		for(int x = 0 ; x < 16 ; x++ ) {
@@ -343,7 +332,7 @@ void putblock(int px , int py , char *buf) {
 	}	
 
 }
-
+*/
 void int2hex(unsigned int i , char* buf) {
      char* _t = "0123456789ABCDEF" ;
      unsigned int mask = 0x0F ;

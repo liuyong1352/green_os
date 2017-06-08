@@ -22,6 +22,15 @@ void putfont(char* vram , int xsize , int x, int y ,char color ,  char ch) {
 
 }
 
+void showString(char* buf , int bxsize , int x , int y , char color , char* s) {
+	
+	for( ; *s !='\0' ; s++ ) { 
+		putfont(buf ,bxsize,  x ,y ,color,  *s);
+		x += 8 ;     
+    }
+}
+
+/*
 void showString(struct SHTCTL* ctl , struct SHEET* sht , int x ,int y , char color , char* s){
 	int vx0 = x  ; 
 	for( ; *s !='\0' ; s++ ) { 
@@ -30,6 +39,7 @@ void showString(struct SHTCTL* ctl , struct SHEET* sht , int x ,int y , char col
     }
 	sheet_refresh(ctl , sht , vx0  , y  , x , y + 16 ) ;    
 }
+*/
 
 void boxfill(char* buf , int bxsize  , unsigned char c, int x0, int y0,int x1, int y1){
 	
@@ -60,6 +70,57 @@ void init_screen(char* buf  ,int xsize , int ysize  ){
 	boxfill( buf , xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 }
 
+void make_window8(char* buf , int bxsize , int bysize , char *title) {
+    static char closebtn[14][16] = {
+        "OOOOOOOOOOOOOOO@", 
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQ@@QQQQ@@QQ$@",
+        "OQQQQ@@QQ@@QQQ$@",
+        "OQQQQQ@@@@QQQQ$@",
+        "OQQQQQQ@@QQQQQ$@",
+        "OQQQQQ@@@@QQQQ$@",
+        "OQQQQ@@QQ@@QQQ$@",
+        "OQQQ@@QQQQ@@QQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "O$$$$$$$$$$$$$$@",
+        "@@@@@@@@@@@@@@@@"
+    };
+    
+	boxfill(buf, bxsize, COL8_C6C6C6, 0, 0, bxsize - 1, 0);
+    boxfill(buf, bxsize, COL8_FFFFFF, 1, 1, bxsize - 2, 1);
+    boxfill(buf, bxsize, COL8_C6C6C6, 0, 0, 0,         bysize - 1);
+    boxfill(buf, bxsize, COL8_FFFFFF, 1, 1, 1,         bysize - 1);
+    boxfill(buf, bxsize, COL8_848484, bxsize - 2, 1, bxsize - 2, bysize - 2);
+    boxfill(buf, bxsize, COL8_000000, bxsize - 1, 0, bxsize - 1, bysize - 1);
+    boxfill(buf, bxsize, COL8_C6C6C6, 2, 2, bxsize - 3, bysize - 3);
+    boxfill(buf, bxsize, COL8_000084, 3, 3, bxsize - 4, 20);
+    boxfill(buf, bxsize, COL8_848484, 1, bysize - 2, bxsize - 2, bysize - 2);
+    boxfill(buf, bxsize, COL8_000000, 0, bysize - 1, bxsize - 1, bysize - 1);
+    
+    showString(buf , bxsize, 24, 4, COL8_FFFFFF, title);
+	for (int y = 0; y < 14; y++) {
+        for (int x = 0; x < 16; x++) {
+            char c = closebtn[y][x];
+            if (c == '@') {
+                c = COL8_000000;
+            } else if (c == '$') {
+                c = COL8_848484;
+            } else if (c == 'Q') {
+                c = COL8_C6C6C6;
+            } 
+            else {
+                c = COL8_FFFFFF;
+            }
+
+            buf[(5+y) * bxsize + (bxsize - 21 + x)] = c;
+        }
+
+    }
+}
+
+/*
 void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title) {
 
     static char closebtn[14][16] = {
@@ -83,16 +144,16 @@ void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title) {
     char c;
     int bxsize = sht->bxsize;
     int bysize = sht->bysize;
-    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 0, 0, bxsize - 1, 0);
-    boxfill8(sht->buf, bxsize, COL8_FFFFFF, 1, 1, bxsize - 2, 1);
-    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 0, 0, 0,         bysize - 1);
-    boxfill8(sht->buf, bxsize, COL8_FFFFFF, 1, 1, 1,         bysize - 1);
-    boxfill8(sht->buf, bxsize, COL8_848484, bxsize - 2, 1, bxsize - 2, bysize - 2);
-    boxfill8(sht->buf, bxsize, COL8_000000, bxsize - 1, 0, bxsize - 1, bysize - 1);
-    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 2, 2, bxsize - 3, bysize - 3);
-    boxfill8(sht->buf, bxsize, COL8_000084, 3, 3, bxsize - 4, 20);
-    boxfill8(sht->buf, bxsize, COL8_848484, 1, bysize - 2, bxsize - 2, bysize - 2);
-    boxfill8(sht->buf, bxsize, COL8_000000, 0, bysize - 1, bxsize - 1, bysize - 1);
+    boxfill(sht->buf, bxsize, COL8_C6C6C6, 0, 0, bxsize - 1, 0);
+    boxfill(sht->buf, bxsize, COL8_FFFFFF, 1, 1, bxsize - 2, 1);
+    boxfill(sht->buf, bxsize, COL8_C6C6C6, 0, 0, 0,         bysize - 1);
+    boxfill(sht->buf, bxsize, COL8_FFFFFF, 1, 1, 1,         bysize - 1);
+    boxfill(sht->buf, bxsize, COL8_848484, bxsize - 2, 1, bxsize - 2, bysize - 2);
+    boxfill(sht->buf, bxsize, COL8_000000, bxsize - 1, 0, bxsize - 1, bysize - 1);
+    boxfill(sht->buf, bxsize, COL8_C6C6C6, 2, 2, bxsize - 3, bysize - 3);
+    boxfill(sht->buf, bxsize, COL8_000084, 3, 3, bxsize - 4, 20);
+    boxfill(sht->buf, bxsize, COL8_848484, 1, bysize - 2, bxsize - 2, bysize - 2);
+    boxfill(sht->buf, bxsize, COL8_000000, 0, bysize - 1, bxsize - 1, bysize - 1);
 
     showString(shtctl, sht, 24, 4, COL8_FFFFFF, title);
 
@@ -114,6 +175,34 @@ void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title) {
         }
 
     }
+}
+*/
 
-    return;
+void init_mouse(char* mouse , char bc) {
+	static char cursor[16][16] = {
+         "**************..",
+         "*OOOOOOOOOOO*...",
+         "*OOOOOOOOOO*....",
+         "*OOOOOOOOO*.....",
+         "*OOOOOOOO*......",
+         "*OOOOOOO*.......",
+         "*OOOOOOO*.......",
+         "*OOOOOOOO*......",
+         "*OOOO**OOO*.....",
+         "*OOO*..*OOO*....",
+         "*OO*....*OOO*...",
+         "*O*......*OOO*..",
+         "**........*OOO*.",
+         "*..........*OOO*",
+         "............*OO*",
+         ".............***"
+    };
+	for(int y = 0 ; y < 16 ; y++ ){
+		for(int x = 0 ; x < 16 ; x++ ){
+			if(cursor[y][x] == '*') mouse[y * 16 + x] = COL8_000000 ; 
+			if(cursor[y][x] == 'O') mouse[y * 16 + x] = COL8_FFFFFF ; 
+			if(cursor[y][x] == '.') mouse[y * 16 + x] = bc ; 
+		}
+	}
+
 }
