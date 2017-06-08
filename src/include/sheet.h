@@ -20,7 +20,7 @@ struct SHTCTL* shtctl_init(struct MEMMAN* man , unsigned char* vram , int xsize 
 struct SHEET* sheet_alloc(struct SHTCTL* ctl ) ;
 void sheet_setbuf(struct SHEET* sheet  , unsigned char* buf  , int bxsize , int bysize , int col_inv) ;
 void sheet_updown(struct SHTCTL* ctl , struct SHEET* sht , int height );
-void sheet_refresh(struct SHTCTL* ctl) ;
+void sheet_refresh(struct SHTCTL *ctl, struct SHEET *sht, int bx0, int by0, int bx1, int by1);
 void sheet_slide(struct SHTCTL* ctl , struct SHEET* sht , int vx0 , int vy0) ; 
 void sheet_refreshsub(struct SHTCTL* ctl , int vx0 ,int vy0 , int vx1 ,int vy1) ;
 #endif 

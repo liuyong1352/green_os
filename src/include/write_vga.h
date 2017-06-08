@@ -3,24 +3,9 @@
 #include <graphic.h>
 #include <std.h>
 #include <kernel.h>
+#include <fifo.h>
 
-#define FLAGS_OVERRUN 0x01
-#define  COL8_000000  0
-#define  COL8_FF0000  1
-#define  COL8_00FF00  2
-#define  COL8_FFFF00  3
-#define  COL8_0000FF  4
-#define  COL8_FF00FF  5
-#define  COL8_00FFFF  6
-#define  COL8_FFFFFF  7
-#define  COL8_C6C6C6  8
-#define  COL8_840000  9
-#define  COL8_008400  10
-#define  COL8_848400  11
-#define  COL8_000084  12
-#define  COL8_840084  13
-#define  COL8_008484  14
-#define  COL8_848484  15
+//#define FLAGS_OVERRUN 0x01
 
 #define PIC0_OCW2 0x0020
 #define PIC1_OCW2 0x00a0
@@ -49,5 +34,4 @@ void init_keyboard();
 void enable_mouse();
 int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) ;
 
-void init_screen(char* buf , int bxsize , int bysize);
 void int2hex(unsigned int x , char* buf) ;

@@ -7,26 +7,15 @@ unsigned char inb_p(int port);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
-void boxfill(char* buf , int bxsize , unsigned char c, int x0, int y0,int x1, int y1);
 
 void init_mouse(char* mouse , char bc) ;
 void putblock(int px , int py , char *buf);
 void toHex(char c , char* buf) ; 
 void printdTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
-struct FIFO {
-	unsigned char* buf ;
-	int p , q , free ,size , flags ; 
-};
 
 static struct FIFO keyfifo = {0};
 static struct FIFO mousefifo = {0} ; 
-
-int fifo_status(struct FIFO* fifo) ;
-void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) ;
-
-int fifo_put(struct FIFO* fifo ,unsigned char data ) ;
-int fifo_get(struct FIFO* fifo );
 
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
@@ -76,9 +65,28 @@ void cmain(void){
 	sheet_updown(shtctl , sht_mouse , 1) ;
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 	
 	//printdTotalMem(memman) ;
-	char* buf[64] ; 
+	char buf[64] ; 
+/*
 	sprintf(buf ,"This is test 0x%x" , 100 ) ;  
 	showString(shtctl , sht_back, 20 , 0 , COL8_000000, buf);
+	sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
+	sheet_slide(shtctl , sht_mouse , mx  , my) ;
+	showString(shtctl , sht_back, 20 , 0 , COL8_000000, buf);
+	sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
+	for(int i = 0 ; i < 100 ; i++ ) {
+	sheet_slide(shtctl , sht_mouse , mx  , my) ;
+	sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
+	delay(400);
+	}
+*/	
+	//init_screen(buf_back , xsize , ysize) ;
+	sprintf(buf ,"%x %x %x %x" , shtctl->xsize , shtctl->ysize,shtctl->top,(int)shtctl->vram) ;
+	showString(shtctl , sht_back, 0 , my , COL8_000000, buf);
+	sprintf(buf ,"%x %x %x %x" , sht_back->bxsize , sht_back->bysize,sht_back->height,(int)sht_back->buf) ;
+	showString(shtctl , sht_back, 0 , my + 16 , COL8_000000, buf);
+	sprintf(buf ,"%x %x %x %x" , sht_mouse->bxsize , sht_mouse->bysize,sht_mouse->height,(int)sht_mouse->buf) ;
+	showString(shtctl , sht_back, 0 , my + 32 , COL8_000000, buf);
+	//sheet_refresh(shtctl);
 	int count = 0 ; 	
 	for(;;) {
 		asm_cli ;
@@ -102,12 +110,18 @@ void cmain(void){
 					mx = 0 ;
 				if(my < 0 ) 
 					my = 0 ;
+				/*
+				if(mx > xsize - 1) 
+					mx = xsize - 1 ;
+				if(my > ysize - 1 ) 
+					my = ysize - 1 ;
+	*/
 				if(mx > xsize - 16 )
 					mx = xsize -16 ;
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
-				sheet_slide(shtctl , sht_mouse , mx , my) ;
  				
+				sheet_slide(shtctl , sht_mouse , mx , my) ;
 			}
 		}else {
 		 	asm_stihlt ; 
@@ -288,15 +302,6 @@ void init_palette(void){
 
 }
 
-void boxfill(char* buf , int bxsize  , unsigned char c, int x0, int y0,int x1, int y1){
-	
-	int x, y ;
-	for(y = y0 ; y <= y1 ; y++ ){
-		for(x = x0 ; x <= x1 ; x++){
-			buf[y*bxsize + x] = c ; 
-		}
-	}
-}
 void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
 	boxfill(vram , xsize  , c , x0 , y0 , x1 , y1) ;
 }
@@ -348,44 +353,6 @@ void int2hex(unsigned int i , char* buf) {
          i >>= 4 ; 
     }while(pos) ;
 }
-int fifo_status(struct FIFO* fifo) {
-	return fifo->size  - fifo->free  ;
-}
-
-
-void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) {
-	
-	fifo->size	= size ;
-	fifo->buf	= buf ;
-	fifo->free	= size ; 
-	fifo->flags	= 0;
-	fifo->p 	= 0 ;
-	fifo->q 	= 0 ; 
-}
-
-int fifo_put(struct FIFO* fifo ,unsigned char data ) {
-	if(fifo->free == 0 ) {
-		fifo->flags |= FLAGS_OVERRUN ; 
-		return -1 ;	
-	}
-	fifo->buf[fifo->p] = data ;
-	fifo->p++ ;
-	fifo->p %= fifo->size ; 
-	fifo->free--;
-	return 0 ; 
-}
-
-int fifo_get(struct FIFO* fifo ){
-	int data ; 
-	if(fifo->free == fifo->size) {
-		return -1 ;
-	}
-	data = fifo->buf[fifo->q] ;
-	fifo->free++ ;
-	fifo->q++ ;
-	fifo->q %= fifo->size ; 
-	return data ; 
-}
 
 void wait_KBC_sendready(){
 	for(;;){
@@ -421,23 +388,4 @@ void intHandlerForMouse(int* esp) {
 	outb_p(PIC0_OCW2 , 0x62) ;//通知PIC0 IRQ_02 的受理已完成
 	data = inb_p(PORT_KEYDAT) ;
     fifo_put(&mousefifo , data) ; 
-}
-
-void init_screen(char* buf  ,int xsize , int ysize  ){
-	boxfill( buf , xsize, COL8_008484, 0, 0, xsize-1, ysize-29);
-	boxfill( buf , xsize, COL8_C6C6C6, 0, ysize - 28 , xsize-1, ysize-28);
-	boxfill( buf , xsize, COL8_FFFFFF, 0, ysize - 27 , xsize-1, ysize-27);
-	boxfill( buf , xsize, COL8_C6C6C6, 0, ysize - 26 , xsize-1, ysize-1);
-
-	boxfill( buf , xsize, COL8_FFFFFF, 3, ysize - 24 , 59, ysize-24);
-	boxfill( buf , xsize, COL8_FFFFFF, 2, ysize - 24 , 2, ysize-4);
-	boxfill( buf , xsize, COL8_848484, 4, ysize - 4 , 59, ysize-4);
-	boxfill( buf , xsize, COL8_848484, 59, ysize - 23 , 59, ysize-5);
-	boxfill( buf , xsize, COL8_000000, 2, ysize - 3 , 59, ysize-3);
-	boxfill( buf , xsize, COL8_000000, 60, ysize - 24 , 60, ysize-3);
-	
-	boxfill( buf , xsize, COL8_848484, xsize -47, ysize - 24 , xsize-4, ysize-24);
-	boxfill( buf , xsize, COL8_848484, xsize -47, ysize - 23 , xsize-47, ysize-3);
-	boxfill( buf , xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
-	boxfill( buf , xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 }

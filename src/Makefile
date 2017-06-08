@@ -4,13 +4,14 @@ default:
 	make run
 obj:memory.c write_vga.c sheet.c lib/delay.c graphic.c vsprintf.c
 	$(CC) $(CFLAGS)  -o memory.o memory.c 
-	$(CC) $(CFLAGS) -DDRAW_DESKTOP  write_vga.c -o write_vga.o
 	$(CC) $(CFLAGS)  sheet.c -o sheet.o
-	$(CC) $(CFLAGS)  lib/delay.c -o delay.o
+	$(CC) $(CFLAGS)  fifo.c -o fifo.o
 	$(CC) $(CFLAGS)  graphic.c -o graphic.o
 	$(CC) $(CFLAGS)  vsprintf.c -o vsprintf.o
+	$(CC) $(CFLAGS)  lib/delay.c -o delay.o
+	$(CC) $(CFLAGS) -DDRAW_DESKTOP  write_vga.c -o write_vga.o
 ld:obj memory.o write_vga.o sheet.o
-	ld -m elf_i386 -r  write_vga.o sheet.o  memory.o delay.o graphic.o vsprintf.o  -o cmain.o
+	ld -m elf_i386 -r  write_vga.o fifo.o sheet.o  memory.o delay.o graphic.o vsprintf.o  -o cmain.o
 tool:imgTool.c
 	$(CC) imgTool.c -o imgTool
 objconvAsm:ld cmain.o
