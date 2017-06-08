@@ -59,3 +59,61 @@ void init_screen(char* buf  ,int xsize , int ysize  ){
 	boxfill( buf , xsize, COL8_FFFFFF, xsize -47, ysize - 3 , xsize-4, ysize-3);
 	boxfill( buf , xsize, COL8_FFFFFF, xsize -3, ysize - 24 , xsize-3, ysize-3);
 }
+
+void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title) {
+
+    static char closebtn[14][16] = {
+        "OOOOOOOOOOOOOOO@", 
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQ@@QQQQ@@QQ$@",
+        "OQQQQ@@QQ@@QQQ$@",
+        "OQQQQQ@@@@QQQQ$@",
+        "OQQQQQQ@@QQQQQ$@",
+        "OQQQQQ@@@@QQQQ$@",
+        "OQQQQ@@QQ@@QQQ$@",
+        "OQQQ@@QQQQ@@QQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "OQQQQQQQQQQQQQ$@",
+        "O$$$$$$$$$$$$$$@",
+        "@@@@@@@@@@@@@@@@"
+    };
+
+    int x, y;
+    char c;
+    int bxsize = sht->bxsize;
+    int bysize = sht->bysize;
+    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 0, 0, bxsize - 1, 0);
+    boxfill8(sht->buf, bxsize, COL8_FFFFFF, 1, 1, bxsize - 2, 1);
+    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 0, 0, 0,         bysize - 1);
+    boxfill8(sht->buf, bxsize, COL8_FFFFFF, 1, 1, 1,         bysize - 1);
+    boxfill8(sht->buf, bxsize, COL8_848484, bxsize - 2, 1, bxsize - 2, bysize - 2);
+    boxfill8(sht->buf, bxsize, COL8_000000, bxsize - 1, 0, bxsize - 1, bysize - 1);
+    boxfill8(sht->buf, bxsize, COL8_C6C6C6, 2, 2, bxsize - 3, bysize - 3);
+    boxfill8(sht->buf, bxsize, COL8_000084, 3, 3, bxsize - 4, 20);
+    boxfill8(sht->buf, bxsize, COL8_848484, 1, bysize - 2, bxsize - 2, bysize - 2);
+    boxfill8(sht->buf, bxsize, COL8_000000, 0, bysize - 1, bxsize - 1, bysize - 1);
+
+    showString(shtctl, sht, 24, 4, COL8_FFFFFF, title);
+
+    for (y = 0; y < 14; y++) {
+        for (x = 0; x < 16; x++) {
+            c = closebtn[y][x];
+            if (c == '@') {
+                c = COL8_000000;
+            } else if (c == '$') {
+                c = COL8_848484;
+            } else if (c == 'Q') {
+                c = COL8_C6C6C6;
+            } 
+            else {
+                c = COL8_FFFFFF;
+            }
+
+            sht->buf[(5+y) * sht->bxsize + (sht->bxsize - 21 + x)] = c;
+        }
+
+    }
+
+    return;
+}
