@@ -23,8 +23,8 @@
 void init_palette(void);
 
 void boxfill(char* buf , int bxsize , unsigned char color, int x0, int y0,int x1, int y1);
-void init_screen(char* vram  ,int xsize , int ysize  );
-void putfont(char* vram , int xsize , int x, int y ,char color ,  char c); 
+void init_screen(char* vbuf  ,int xsize , int ysize  );
+void putfont(char* vbuf , int xsize , int x, int y ,char color ,  char c); 
 //void showString(struct SHTCTL* ctl , struct SHEET* sht , int x ,int y , char color , char* s) ; 
 void showString(char* buf , int xsize , int x ,int y , char color , char* s) ; 
 void make_window8(char* buf , int bxsize , int bysize , char *title) ;

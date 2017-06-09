@@ -2,14 +2,14 @@
 
 extern char systemFont[16];
 
-void putfont(char* vram , int xsize , int x, int y ,char color ,  char ch) {
+void putfont(char* vbuf , int xsize , int x, int y ,char color ,  char ch) {
 	//8 * 16
     int i = 0 ; 
     char* p ;
 	char* font = systemFont + (ch*16) ;    
     for( ; i < 16  ; i ++ ) { 
         char c = font[i] ;
-        p = vram + (y + i ) *xsize  + x ; 
+        p = vbuf + (y + i ) *xsize  + x ; 
         if(c & 0x80 ) p[0] = color ;
         if(c & 0x40 ) p[1] = color ;
         if(c & 0x20 ) p[2] = color ;
