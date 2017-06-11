@@ -69,18 +69,17 @@ void cmain(void){
 	init_mouse( buf_mouse, 99) ;	
 	make_window8(buf_win , 160 ,68  , "window");
 
-//	showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
-//	showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
+	showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
+	showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
 
 	sheet_slide(shtctl , sht_back , 0 , 0 ) ; 
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 		
 	sheet_slide(shtctl , sht_win , 0 , ysize-68) ; 	
 
 	sheet_updown(shtctl , sht_back , 0 ) ;
-	delay(150000);
-	//sheet_updown(shtctl , sht_win , 1) ;
-	//sheet_updown(shtctl , sht_mouse , 2) ;
-	sheet_updown(shtctl , sht_mouse , 1) ;
+	sheet_updown(shtctl , sht_win , 1) ;
+	sheet_updown(shtctl , sht_mouse , 2) ;
+	//sheet_updown(shtctl , sht_mouse , 1) ;
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
 /*
@@ -152,7 +151,7 @@ void cmain(void){
 					mx = xsize -16 ;
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
- 				
+ 		//		pushbox(vram);        	
 				sheet_slide(shtctl , sht_mouse , mx , my) ;
 			}
 		}else {
@@ -394,3 +393,4 @@ void intHandlerForMouse(int* esp) {
 	data = inb_p(PORT_KEYDAT) ;
     fifo_put(&mousefifo , data) ; 
 }
+

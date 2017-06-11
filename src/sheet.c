@@ -267,14 +267,14 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
             vy = sht->vy0 + by;
             for (bx = 0; bx < sht->bxsize; bx++) {
                 vx = sht->vx0 + bx;
-                if (vx0 <= vx && vx < vx1 && vy0 <= vy && vy < vy1) {
+//                if (vx0 <= vx && vx < vx1 && vy0 <= vy && vy < vy1) {
 //	              if (vx0 <= vx && vx < vx1 && vy < vy1) {
                     c = buf[by * sht->bxsize + bx];
                     if (c != sht->col_inv) {
                         vbuf[vy * ctl->xsize + vx] = c;
                     }
 		          }
-            }
+//           }
         }
     }
 }
