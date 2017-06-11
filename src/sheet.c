@@ -256,25 +256,30 @@ void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
     }
 }
 
-void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
-    int h, bx, by, vx, vy;
-    unsigned char *buf, c, *vbuf = ctl->vram;
-    struct SHEET *sht;
-    for (h = 0; h <= ctl->top; h++) {
-        sht = ctl->sheets[h];
-        buf = sht->buf;
+void sheet_draw(struct SHTCTL *ctl , struct SHEET *sht , int vx0 , int vy0 , int vx1 ,int vy1) {
+	
+    int  bx, by, vx, vy;
+    unsigned char *buf = sht->buf ;
+    unsigned char  c ; 
+    unsigned char  *vbuf = ctl->vram;
         for (by = 0; by < sht->bysize; by++) {
             vy = sht->vy0 + by;
             for (bx = 0; bx < sht->bxsize; bx++) {
                 vx = sht->vx0 + bx;
 //                if (vx0 <= vx && vx < vx1 && vy0 <= vy && vy < vy1) {
-//	              if (vx0 <= vx && vx < vx1 && vy < vy1) {
+	              if (vx0 <= vx && vx < vx1 && vy < vy1) {
                     c = buf[by * sht->bxsize + bx];
                     if (c != sht->col_inv) {
                         vbuf[vy * ctl->xsize + vx] = c;
                     }
 		          }
-//           }
-        }
+           }
+  	}
+
+}
+
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
+    for (int h = 0; h <= ctl->top; h++) {
+        sheet_draw(ctl ,  ctl->sheets[h] , vx0 ,vy0 ,vx1 , vy1);
     }
 }
