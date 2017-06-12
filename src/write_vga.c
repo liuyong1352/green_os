@@ -77,8 +77,8 @@ void cmain(void){
 	sheet_slide(shtctl , sht_win , mx - 70  , my - 30) ; 		
 
 	sheet_updown(shtctl , sht_back , 0 ) ;
-	sheet_updown(shtctl , sht_win , 2) ;
-	sheet_updown(shtctl , sht_mouse , 1) ;
+	sheet_updown(shtctl , sht_win , 1) ;
+	sheet_updown(shtctl , sht_mouse , 2) ;
 	//sheet_updown(shtctl , sht_mouse , 1) ;
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
