@@ -74,25 +74,21 @@ void cmain(void){
 
 	sheet_slide(shtctl , sht_back , 0 , 0 ) ; 
 	sheet_slide(shtctl , sht_mouse , mx , my) ; 		
-	sheet_slide(shtctl , sht_win , 0 , ysize-68) ; 	
+	sheet_slide(shtctl , sht_win , mx - 70  , my - 30) ; 		
 
 	sheet_updown(shtctl , sht_back , 0 ) ;
-	sheet_updown(shtctl , sht_win , 1) ;
-	sheet_updown(shtctl , sht_mouse , 2) ;
+	sheet_updown(shtctl , sht_win , 2) ;
+	sheet_updown(shtctl , sht_mouse , 1) ;
 	//sheet_updown(shtctl , sht_mouse , 1) ;
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
-/*
-	sprintf(buf ,"This is test 0x%x" , 100 ) ;  
-	showString(shtctl , sht_back, 20 , 0 , COL8_000000, buf);
-	for(int i = 0 ; i < 100 ; i++ ) {
-	sheet_slide(shtctl , sht_win , 0  , ysize - 68) ;
-	delay(14000);
-	sheet_slide(shtctl , sht_win , 0  , 0 ) ;
-	}
-*/	
 	int count = 0 ; 	
 	for(;;) {
+		count++ ; 
+		sprintf(buf , "%x" , count) ;
+		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
+		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
+		sheet_refresh(shtctl , sht_win , 40 , 28 , 120 , 44) ; 
 		asm_cli ;
 		if(fifo_status(&keyfifo)) {
 			char i  = fifo_get(&keyfifo); 
@@ -119,7 +115,7 @@ void cmain(void){
 			if(i == 0x1E ){
 				count += 16 ;
 				count %= 200 ; 
-				sprintf(buf ,"%x %x %x %x" , i , shtctl->ysize,shtctl->top,(int)shtctl->vram) ;
+				sprintf(buf ,"%x %x %x %x" , i , shtctl->ysize,shtctl->top,(int)buf) ;
 				showString(buf_back , xsize , 0 , count , COL8_000000, buf);
 				//sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
 				sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
@@ -155,7 +151,8 @@ void cmain(void){
 				sheet_slide(shtctl , sht_mouse , mx , my) ;
 			}
 		}else {
-		 	asm_stihlt ; 
+		 	//asm_stihlt ; 
+		 	asm_sti ; 
 		} 
 	}
 }
