@@ -2,8 +2,6 @@
 
 typedef unsigned char uchar ;
 
-void outb_p(int port , int data);
-unsigned char inb_p(int port);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
@@ -34,7 +32,7 @@ void cmain(void){
 	fifo_init(&mousefifo , 128 , mousebuf) ;   
 	
 	init_keyboard();
-	
+	init_pit();	
 	asm_sti ; 
 	int mx = (xsize -16) / 2 ;
 	int my = (ysize - 16) / 2 ;	
@@ -83,9 +81,10 @@ void cmain(void){
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
 	int count = 0 ; 	
+	struct TIMERCTL *timerctl = getTimerCTL(); 
 	for(;;) {
 		count++ ; 
-		sprintf(buf , "%x" , count) ;
+		sprintf(buf , "%x" , timerctl->count) ;
 		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
 		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
 		sheet_refresh(shtctl , sht_win , 40 , 28 , 120 , 44) ; 

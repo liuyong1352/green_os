@@ -1,13 +1,13 @@
 #include <mm.h>
 #include <sheet.h>
 #include <graphic.h>
+#include <timer.h>
 #include <std.h>
 #include <kernel.h>
 #include <fifo.h>
 
 //#define FLAGS_OVERRUN 0x01
 
-#define PIC0_OCW2 0x0020
 #define PIC1_OCW2 0x00a0
 
 #define PORT_KEYDAT 0x60 
@@ -35,3 +35,4 @@ void enable_mouse();
 int mouse_decode(struct MOUSE_DEC* mdec , unsigned char dat) ;
 
 void int2hex(unsigned int x , char* buf) ;
+

@@ -21,9 +21,11 @@ SelectorVram      equ   LABEL_DESC_VRAM   - LABEL_GDT
 SelectorStack     equ   LABEL_DESC_STACK  - LABEL_GDT
 
 label_idt:
-%rep 33
+%rep 32
 	Gate SelectorCode32 ,SpuriousHandler , 0 , DA_386IGate
 %endrep
+.20h:
+	Gate SelectorCode32 ,TimerHandler , 0 , DA_386IGate
 .21h:
 	Gate SelectorCode32 ,KeyBoardHandler , 0 , DA_386IGate
 %rep 10
@@ -108,7 +110,8 @@ smap_end:
 	dw 0xeb ,0xeb;delay	 
 	;mov al , 0xFF
 	;mov al , 11111101b ; 允许键盘中断
-	mov al , 11111001b ; 允许键盘中断
+	;mov al , 11111001b ; 允许键盘中断
+	mov al , 11111000b ;  允许时钟中断
 	out 021h , al
 	dw 0xeb ,0xeb;delay	 
 	;mov al , 0xFF 
@@ -176,6 +179,23 @@ LABEL_SEG_CODE32:
 	jmp $
 _SpuriousHandler:
 SpuriousHandler equ _SpuriousHandler - $$
+	iretd
+_TimerHandler:
+TimerHandler equ _TimerHandler - $$
+	push es 
+	push ds 
+	pushad 
+	mov eax ,esp 
+	push eax 
+	mov ax ,ss 
+	mov ds , ax 
+	mov es , ax 
+	
+	call inthandler20
+	pop eax 
+	popad
+	pop ds 
+	pop es 
 	iretd
 _KeyBoardHandler:
 KeyBoardHandler equ _KeyBoardHandler - $$
