@@ -42,3 +42,4 @@ NOTE:
 * linux15.0.7 整理fifo graphic 从write_vga中移出来 ， 暂时有个鼠标移动的bug
 * linux16.0.0 显示windows窗口 ， 增加一个计数器 ， 不过有闪烁 ， 以下我继续接着解决吧
 * linux16.0.1 消除闪烁 ， 不过鼠标放上面还是有闪烁
+* linux16.0.2 消除闪烁V2
