@@ -12,7 +12,7 @@ void testMem(struct MEMMAN* man) ;
 
 static struct FIFO keyfifo = {0};
 static struct FIFO mousefifo = {0} ; 
-
+static struct FIFO timerfifo = {0} ; 
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
@@ -27,13 +27,17 @@ void cmain(void){
 	init_palette();
 	
 	static char keybuf[32] = {0};
-	static char mousebuf[128] = {0} ;  
+	static char mousebuf[128] = {0} ; 
+	static char timerbuf[8] = {0} ; 
 	fifo_init(&keyfifo , 32 ,keybuf ) ; 
 	fifo_init(&mousefifo , 128 , mousebuf) ;   
+	fifo_init(&timerfifo , 8 , timerbuf) ; 
 	
 	init_keyboard();
-	init_pit();	
-	asm_sti ; 
+	init_pit();
+	struct TIMERCTL *timerctl = getTimerCTL(); 
+	settimer(1000 , &timerfifo , 1) ; 	
+	sti(); 
 	int mx = (xsize -16) / 2 ;
 	int my = (ysize - 16) / 2 ;	
 	enable_mouse();
@@ -81,10 +85,9 @@ void cmain(void){
 	//printdTotalMem(memman) ;
 	char buf[64] ; 
 	int count = 0 ; 	
-	struct TIMERCTL *timerctl = getTimerCTL(); 
 	for(;;) {
 		count++ ; 
-		sprintf(buf , "%x" , timerctl->count) ;
+		sprintf(buf , "%x" , timerctl->timeout) ;
 		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
 		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
 		sheet_refresh(shtctl , sht_win , 40 , 28 , 120 , 44) ; 
@@ -149,9 +152,16 @@ void cmain(void){
  		//		pushbox(vram);        	
 				sheet_slide(shtctl , sht_mouse , mx , my) ;
 			}
+		}else if(fifo_status(&timerfifo)){
+	 		char i = fifo_get(&timerfifo) ; 
+			sti();
+			sprintf(buf , "%x[sec]" , i) ;
+			showString(buf_back, xsize , 0 , 0 , COL8_000000 ,buf) ;
+		 	sheet_refresh(shtctl,sht_back , 0 , 0 , xsize , 16);	
 		}else {
 		 	//asm_stihlt ; 
-		 	asm_sti ; 
+		 //	asm_sti ;
+			sti() ; 
 		} 
 	}
 }
