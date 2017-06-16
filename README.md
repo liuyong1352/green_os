@@ -45,3 +45,4 @@ NOTE:
 * linux16.0.2 消除闪烁V2
 * linux16.0.3 开启时钟中断，使用时钟中断实现简单计数器
 * linux16.0.4 实现timeout
+* linux16.0.5 是用多个timer ， 实现光标闪烁的功能

@@ -12,7 +12,6 @@ void testMem(struct MEMMAN* man) ;
 
 static struct FIFO keyfifo = {0};
 static struct FIFO mousefifo = {0} ; 
-static struct FIFO timerfifo = {0} ; 
 char* vram = (char*)0xa0000 ; 
 int xsize  = 320 ;
 int ysize  = 200 ; 
@@ -28,15 +27,38 @@ void cmain(void){
 	
 	static char keybuf[32] = {0};
 	static char mousebuf[128] = {0} ; 
-	static char timerbuf[8] = {0} ; 
-	fifo_init(&keyfifo , 32 ,keybuf ) ; 
-	fifo_init(&mousefifo , 128 , mousebuf) ;   
-	fifo_init(&timerfifo , 8 , timerbuf) ; 
-	
-	init_keyboard();
+
 	init_pit();
 	struct TIMERCTL *timerctl = getTimerCTL(); 
-	settimer(1000 , &timerfifo , 1) ; 	
+    struct FIFO timerfifo = {0} ; 
+    struct FIFO timerfifo2 = {0} ; 
+    struct FIFO timerfifo3 = {0} ; 
+	static char timerbuf[4] = {0} ; 
+	static char timerbuf2[4] = {0} ; 
+	static char timerbuf3[4] = {0} ; 
+				
+	struct TIMER *timer , *timer2 , *timer3; 
+	fifo_init(&timerfifo , 4 , timerbuf) ;
+	timer = timer_alloc(); 
+	timer_init(timer , &timerfifo , 1);
+	timer_settime(timer ,1000); 	
+	
+	fifo_init(&timerfifo2 , 4 , timerbuf2) ;
+	timer2 = timer_alloc(); 
+	timer_init(timer2 , &timerfifo2 , 1);
+	timer_settime(timer2 ,300);
+ 	
+	fifo_init(&timerfifo3 , 4 , timerbuf3) ;
+	timer3 = timer_alloc(); 
+	timer_init(timer3 , &timerfifo3 , 1);
+	timer_settime(timer3 ,50); 	
+	
+	
+
+	fifo_init(&keyfifo , 32 ,keybuf ) ; 
+	fifo_init(&mousefifo , 128 , mousebuf) ;   
+	
+	init_keyboard();
 	sti(); 
 	int mx = (xsize -16) / 2 ;
 	int my = (ysize - 16) / 2 ;	
@@ -86,8 +108,9 @@ void cmain(void){
 	char buf[64] ; 
 	int count = 0 ; 	
 	for(;;) {
-		count++ ; 
-		sprintf(buf , "%x" , timerctl->timeout) ;
+		//count++ ; 
+		//sprintf(buf , "%x" , timer->timeout) ;
+		sprintf(buf , "%x" ,  timerctl->count) ;
 		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
 		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
 		sheet_refresh(shtctl , sht_win , 40 , 28 , 120 , 44) ; 
@@ -97,16 +120,6 @@ void cmain(void){
 			asm_sti ;
 			 //1E A 30 B	
 			if(i == 0x1C) {
-	sprintf(buf ,"%x %x %x %x" , i , shtctl->ysize,shtctl->top,(int)shtctl->vram) ;
-	showString(buf_back , xsize , 0 , 0 , COL8_000000, buf);
-	sprintf(buf ,"%x %x %x %x" , sht_back->vx0 , sht_back->vy0,sht_back->height,(int)sht_back->buf) ;
-	showString(buf_back , xsize, 0 , 16 , COL8_000000, buf);
-	sprintf(buf ,"%x %x %x %x" , sht_mouse->bxsize , sht_mouse->bysize,sht_mouse->height,(int)sht_mouse->buf) ;
-	showString(buf_back , xsize, 0 , 32 , COL8_000000, buf);
-	sprintf(buf ,"%x %x %x %x" , sht_mouse->vx0 , sht_mouse->vy0,sht_mouse->height,(int)sht_mouse->buf) ;
-	showString(buf_back , xsize, 0 , 48 , COL8_000000, buf);
-//	sprintf(buf ,"%x %x %x %x" , sht_win->bxsize , sht_win->bysize,sht_win->height,(int)sht_win->buf) ;
-//	showString(buf_back , xsize, 0 , ysize-16 , COL8_000000, buf);
 //				sheet_slide(shtctl , sht_mouse , mx , my) ;
 				//showMemInfo(memAddr + count++) ;
 				//count %= smap_size;
@@ -117,7 +130,7 @@ void cmain(void){
 			if(i == 0x1E ){
 				count += 16 ;
 				count %= 200 ; 
-				sprintf(buf ,"%x %x %x %x" , i , shtctl->ysize,shtctl->top,(int)buf) ;
+				sprintf(buf ,"%x %x %x %x" , (int)timerctl , shtctl->ysize,shtctl->top,(int)buf) ;
 				showString(buf_back , xsize , 0 , count , COL8_000000, buf);
 				//sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
 				sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
@@ -158,9 +171,26 @@ void cmain(void){
 			sprintf(buf , "%x[sec]" , i) ;
 			showString(buf_back, xsize , 0 , 0 , COL8_000000 ,buf) ;
 		 	sheet_refresh(shtctl,sht_back , 0 , 0 , xsize , 16);	
+		}else if(fifo_status(&timerfifo2)){
+			char dat = fifo_get(&timerfifo2);
+			sti();
+			sprintf(buf , "%x[sec]" , dat) ;
+			showString(buf_back, xsize , 0 , 16 , COL8_000000 ,buf) ;
+		 	sheet_refresh(shtctl,sht_back , 0 , 16 , xsize , 32);	
+		}else if(fifo_status(&timerfifo3)){
+			char dat = fifo_get(&timerfifo3);
+			sti();
+			if( dat != 0 ) {
+				timer_init(timer3 , &timerfifo3 , 0 ) ;
+				boxfill(buf_back , xsize , COL8_FFFFFF , 8 , 96 ,15, 111) ; 
+			} else {
+				timer_init(timer3, &timerfifo3 , 1) ; 
+				boxfill(buf_back , xsize ,COL8_008484 , 8 , 96 , 15 ,111) ; 
+			}
+			timer_settime(timer3 , 50) ;
+			sheet_refresh(shtctl , sht_back , 8 , 96, 15 ,111);
 		}else {
 		 	//asm_stihlt ; 
-		 //	asm_sti ;
 			sti() ; 
 		} 
 	}

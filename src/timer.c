@@ -11,26 +11,43 @@ void init_pit(){
 	outb_p(PIT_CNT0 , 0x9c);
 	outb_p(PIT_CNT0 , 0x2e);
 	timerctl.count = 0 ;
-	timerctl.timeout = 0 ; 
+	for( int i = 0 ; i < MAX_TIMER ; i++ ){
+		timerctl.timer[i].flags = 0; //not used
+	}
 }
 
 void inthandler20(int *esp){
 	outb_p(PIC0_OCW2 , 0x60);
-	timerctl.count++ ; 
-	if(timerctl.timeout > 0 ) {
-		timerctl.timeout-- ;
-		if(timerctl.timeout == 0){
-			fifo_put(timerctl.fifo , timerctl.data);	
+	timerctl.count++  ;
+	for(int i = 0 ; i < MAX_TIMER  ; i++ ) {
+		struct TIMER* timer = &timerctl.timer[i] ; 
+		if(timer->flags == TIMER_FLAGS_USING ) {
+			timer->timeout-- ; 
+			if(timer->timeout == 0 ) {
+				timer->flags = TIMER_FLAGS_ALLOC ; 
+				fifo_put(timer->fifo , timer->data);
+			}
 		}
 	}
 }
 
-void settimer(unsigned int timeout , struct FIFO *fifo , unsigned char data) {
-	int eflags ; 
-	//eflags = load_eflags() ; 	
-	cli();
-	timerctl.timeout = timeout ;
-	timerctl.fifo = fifo ;
-	timerctl.data = data ;
-	 
+struct TIMER *timer_alloc() {
+	for( int i  = 0 ; i < MAX_TIMER ; i++ ){
+		if(timerctl.timer[i].flags == 0 ) {
+			timerctl.timer[i].flags = TIMER_FLAGS_ALLOC ;
+			return &timerctl.timer[i] ; 
+		}
+	}
+	return 0  ;
+}
+void timer_free(struct TIMER *timer) {
+	timer->flags = 0 ; 
+}
+void timer_init(struct TIMER *timer , struct FIFO *fifo , unsigned char data) {
+	timer->fifo = fifo ;
+	timer->data = data ; 
+}
+void timer_settime(struct TIMER *timer , unsigned int timeout )  {
+	timer->timeout = timeout ;
+	timer->flags   = TIMER_FLAGS_USING ; 
 }
