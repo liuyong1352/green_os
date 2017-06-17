@@ -21,10 +21,6 @@
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE     0xf4
 
-#define asm_cli     __asm__ ("cli")
-#define asm_sti     __asm__ ("sti")	
-#define asm_stihlt  __asm__ ("sti;hlt")
-
 struct MOUSE_DEC {
 	unsigned char buf[3] , phase ;
 	int x , y , btn ;

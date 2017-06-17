@@ -1,11 +1,5 @@
 #include <write_vga.h>
 
-typedef unsigned char uchar ;
-
-int io_load_eflags(void);
-void io_store_eflags(int eflags);
-void boxfill8( unsigned char c, int x0, int y0,int x1, int y1);
-
 void toHex(char c , char* buf) ; 
 void printdTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
@@ -121,10 +115,10 @@ void cmain(void){
 		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
 		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
 		sheet_refresh(shtctl , sht_win , 40 , 28 , 120 , 44) ; 
-		asm_cli ;
+		cli();
 		if(fifo_status(&keyfifo)) {
 			char i  = fifo_get(&keyfifo); 
-			asm_sti ;
+			sti() ;
 			 //1E A 30 B	
 			if(i == 0x1C) {
 //				sheet_slide(shtctl , sht_mouse , mx , my) ;
@@ -143,7 +137,7 @@ void cmain(void){
 			}
 		}else if (fifo_status(&mousefifo)){
 			char i  = fifo_get(&mousefifo); 
-			asm_sti ; 	
+			sti() ; 	
 			if(mouse_decode(&mdec , i)) {
 				mx += mdec.x ;
 				my += mdec.y ;
@@ -189,7 +183,6 @@ void cmain(void){
 			timer_settime(timer3 , 50) ;
 			sheet_refresh(shtctl , sht_back , 8 , 96, 15 ,111);
 		}else {
-		 	//asm_stihlt ; 
 			sti() ; 
 		} 
 	}
@@ -333,7 +326,7 @@ void printx(char c){
 void set_palette(int start , int end , unsigned char* rgb) {
 	int i , eflags ;
 	eflags = io_load_eflags();
-	asm_cli;
+	cli();
 	outb_p(0x03c8 , start); //set palette number
 	for(i = start ; i <= end ; i++ ) {
 		outb_p(0x03c9,rgb[0]/4);
@@ -365,10 +358,6 @@ void init_palette(void){
      };
 	set_palette(0 ,15 , table_rgb);
 
-}
-
-void boxfill8( unsigned char c, int x0, int y0, int x1 , int y1){
-	boxfill(vram , xsize  , c , x0 , y0 , x1 , y1) ;
 }
 
 
