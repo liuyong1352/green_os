@@ -17,15 +17,13 @@ static char* vram = (char*)0xa0000 ;
 static int xsize  = 320 ;
 static int ysize  = 200 ; 
 
-
 /*
-//char* vram = (char*)0xe0000000 ; 
-static char* vram = (char*)0xa0000 ; 
-int xsize  = 640 ;
-int ysize  = 480 ; 
-
+static char* vram = (char*)0xe0000000 ; 
+static int xsize  = 640 ;
+static int ysize  = 480 ; 
 */
 extern unsigned int smap_size ; 
+extern char keytable[1] ;
  
 static int printd_x = 0 , printd_y = 0 ;
 
@@ -132,24 +130,16 @@ void cmain(void){
 //				sheet_slide(shtctl , sht_mouse , mx , my) ;
 				//showMemInfo(memAddr + count++) ;
 				//count %= smap_size;
-	showString(buf_back , xsize, 0 , ysize -16 , COL8_000000, buf);
-	sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
-	init_screen(buf_back , xsize , ysize) ; 
-			}
-			if(i == 0x1E ){
-				count += 16 ;
-				count %= 200 ; 
-				sprintf(buf ,"%x %x %x %x" , (int)timerctl , shtctl->ysize,shtctl->top,(int)buf) ;
-				showString(buf_back , xsize , 0 , count , COL8_000000, buf);
-				//sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
-				sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
-			}
-			if(i == 0x30 ){
-				//sheet_slide(shtctl , sht_mouse , mx  , ysize - 16) ;
-				init_screen(buf_back , xsize , ysize) ; 
-				sprintf(buf ,"%x %x %x %x" , sht_mouse->vx0 , sht_mouse->vy0,(int)buf_back[xsize*(ysize - 100) - 2],(int)buf_back[xsize*ysize - 2]) ;
-				showString(buf_back , xsize, 0 , 48 , COL8_000000, buf);
-				sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
+			showString(buf_back , xsize, 0 , ysize -16 , COL8_000000, buf);
+			sheet_refresh(shtctl ,sht_back, 0 , 0 , xsize , ysize );
+			init_screen(buf_back , xsize , ysize) ; 
+			} else if (keytable[i] != 0 ) {
+				static int x = 0 ; 
+				static int y = 0 ;
+				x += 16 ; 
+				char cbuf[2] = {keytable[i] , 0};
+				showString(buf_back , xsize , x , y  ,COL8_000000 , cbuf) ;
+				sheet_refresh(shtctl , sht_back , x  , y  ,16 + x , 16 + y  ) ;
 			}
 		}else if (fifo_status(&mousefifo)){
 			char i  = fifo_get(&mousefifo); 
