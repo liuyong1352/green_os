@@ -71,10 +71,13 @@ smap_loop:
 smap_Error:
 	mov dword [smap_size] , 0 
 smap_end:
-	;switch vga
-	 mov al , 0x13
-	 mov ah , 0	
-     int 0x10
+	;switch vga 320*200
+	mov al , 0x13
+	mov ah , 0	
+	;640*480
+	;mov bx , 0x4101
+	;mov ax , 0x4f02
+    int 0x10
 	
 	cli   ;关中断
 	 ;reprogram the 8259's ,and it isn,t fun 

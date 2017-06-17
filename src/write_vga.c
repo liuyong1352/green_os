@@ -12,10 +12,19 @@ void testMem(struct MEMMAN* man) ;
 
 static struct FIFO keyfifo = {0};
 static struct FIFO mousefifo = {0} ; 
-char* vram = (char*)0xa0000 ; 
-int xsize  = 320 ;
-int ysize  = 200 ; 
 
+static char* vram = (char*)0xa0000 ; 
+static int xsize  = 320 ;
+static int ysize  = 200 ; 
+
+
+/*
+//char* vram = (char*)0xe0000000 ; 
+static char* vram = (char*)0xa0000 ; 
+int xsize  = 640 ;
+int ysize  = 480 ; 
+
+*/
 extern unsigned int smap_size ; 
  
 static int printd_x = 0 , printd_y = 0 ;
@@ -40,12 +49,12 @@ void cmain(void){
 	struct TIMER *timer , *timer2 , *timer3; 
 	fifo_init(&timerfifo , 4 , timerbuf) ;
 	timer = timer_alloc(); 
-	timer_init(timer , &timerfifo , 1);
+	timer_init(timer , &timerfifo , 10);
 	timer_settime(timer ,1000); 	
 	
 	fifo_init(&timerfifo2 , 4 , timerbuf2) ;
 	timer2 = timer_alloc(); 
-	timer_init(timer2 , &timerfifo2 , 1);
+	timer_init(timer2 , &timerfifo2 , 3);
 	timer_settime(timer2 ,300);
  	
 	fifo_init(&timerfifo3 , 4 , timerbuf3) ;
@@ -314,7 +323,7 @@ void printd(char* s){
 			putfont(vram ,xsize,  printd_x ,printd_y ,COL8_000000 ,  *s);   	
 		}
 		printd_x += 8 ; 
-		if(printd_x == 320 ) {
+		if(printd_x == xsize ) {
 			printd_x = 0 ;
 			printd_y += 16 ;
 		}		

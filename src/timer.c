@@ -22,8 +22,7 @@ void inthandler20(int *esp){
 	for(int i = 0 ; i < MAX_TIMER  ; i++ ) {
 		struct TIMER* timer = &timerctl.timer[i] ; 
 		if(timer->flags == TIMER_FLAGS_USING ) {
-			timer->timeout-- ; 
-			if(timer->timeout == 0 ) {
+			if(timer->timeout <= timerctl.count ) {
 				timer->flags = TIMER_FLAGS_ALLOC ; 
 				fifo_put(timer->fifo , timer->data);
 			}
@@ -48,6 +47,6 @@ void timer_init(struct TIMER *timer , struct FIFO *fifo , unsigned char data) {
 	timer->data = data ; 
 }
 void timer_settime(struct TIMER *timer , unsigned int timeout )  {
-	timer->timeout = timeout ;
+	timer->timeout = timerctl.count + timeout ;
 	timer->flags   = TIMER_FLAGS_USING ; 
 }
