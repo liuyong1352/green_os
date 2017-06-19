@@ -20,7 +20,7 @@ struct TIMER {
 };
 
 struct TIMERCTL {
-	unsigned int count , next_timeout , using ; 
+	unsigned int count , next_timeout ; 
 	struct TIMER* header ; 
 	struct TIMER timer[MAX_TIMER] ; 
 };

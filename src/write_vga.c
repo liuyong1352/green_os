@@ -113,7 +113,7 @@ void cmain(void){
 				static int x = 0 ; 
 				static int y = 0 ;
 				x += 16 ; 
-				char cbuf[2] = {keytable[i] , 0};
+				char cbuf[2] = {keytable[i - 256] , 0};
 				showString(buf_back , xsize , x , y  ,COL8_000000 , cbuf) ;
 				sheet_refresh(sht_back , x  , y  ,16 + x , 16 + y  ) ;
 				}

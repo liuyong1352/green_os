@@ -9,6 +9,10 @@ v1
 0260EBDB
 v2
 076D1337
+v3
+07A32721
+078C4D7E
+0797C562
 **/
 
 static struct TIMERCTL timerctl ;
@@ -18,15 +22,21 @@ struct TIMERCTL* getTimerCTL() {
 }
 
 void init_pit(){
+	struct TIMER *timer ; 
 	outb_p(PIT_CTRL , 0x34);
 	outb_p(PIT_CNT0 , 0x9c);
 	outb_p(PIT_CNT0 , 0x2e);
 	timerctl.count = 0 ;
-	timerctl.next_timeout = 0xffffffff; //no timer used 
-	timerctl.using = 0  ;
 	for( int i = 0 ; i < MAX_TIMER ; i++ ){
 		timerctl.timer[i].flags = 0; //not used
 	}
+	timer = timer_alloc();
+	timer->timeout = 0xffffffff;
+	timer->flags  = TIMER_FLAGS_USING ; 
+	timer->next   = 0 ; /*末尾*/
+	timerctl.header = timer ;
+	timerctl.next_timeout = 0xffffffff; //no timer used 
+	return ; 	
 }
 
 struct TIMER *timer_alloc() {
@@ -53,15 +63,6 @@ void timer_settime(struct TIMER *timer , unsigned int timeout )  {
 	timer->flags   = TIMER_FLAGS_USING ; 
 	e = load_eflags();
 	cli() ; 
-	timerctl.using++ ; 
-	if(timerctl.using == 1 ) {
-		//处于运行状态的定时器只有这一个时
-		timerctl.header = timer ; 
-		timer->next = 0 ; //no next 
-		timerctl.next_timeout = timer->timeout ; 
-		store_eflags(e);
-		return ;
-	}
 
 	t = timerctl.header ; 
 	if(timer->timeout <= t->timeout) {
@@ -76,8 +77,6 @@ void timer_settime(struct TIMER *timer , unsigned int timeout )  {
 	for(;;){
 		s = t ; 
 		t = t->next ; 
-		if(t == 0 )
-			break ; //last one 
 		if(timer->timeout <= t->timeout){
 			s->next = timer ; 
 			timer->next = t ;
@@ -85,16 +84,9 @@ void timer_settime(struct TIMER *timer , unsigned int timeout )  {
 			return ;
 		}
 	}
-
-	//插入最后面的情况下
-	s->next = timer ; 
-	timer->next = 0 ;
-	store_eflags(e) ; 
-	return ;
 }
 
 void inthandler20(int *esp){
-	int i  ; 
 	struct TIMER* timer ; 
 	outb_p(PIC0_OCW2 , 0x60);
 	timerctl.count++  ;
@@ -102,7 +94,7 @@ void inthandler20(int *esp){
 		return ; 
 	}
 	timer = timerctl.header ; 
-	for(i = 0 ; i < timerctl.using ; i++ ) {
+	for(;;) {
 		if(timer->timeout > timerctl.count ) {
 			break ;
 		}
@@ -110,13 +102,7 @@ void inthandler20(int *esp){
 		fifo_put(timer->fifo , timer->data) ;
 		timer = timer->next ;  
 	}	
-	timerctl.using -= i  ;
 	timerctl.header = timer ; 
-
-	if(timerctl.using > 0 ) {
-		timerctl.next_timeout = timerctl.header->timeout ; 
-	}else {
-		timerctl.next_timeout = 0xffffffff ; 
-	}
+	timerctl.next_timeout = timer->timeout ; 
 	return ;
 }

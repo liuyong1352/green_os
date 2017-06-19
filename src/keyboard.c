@@ -93,9 +93,10 @@ void intHandlerForMouse(int* esp) {
 }
 
 void intHandlerFromC(int* esp){
+	int data ;
 	//outb_p(0x20 , 0x61 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
 	outb_p(0x20 , 0x21 ); //通知PIC IRQ-01已经受理完毕 , 我测试 不需要通知也可以 ， 暂时没搞清楚是为什么
-	unsigned char data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
+	data = inb_p(PORT_KEYDAT); //必须从0x60把数据读出来 ， 才会触发 下轮
 	fifo_put(ififo , data + keydata0) ;
 	return ;  
 }

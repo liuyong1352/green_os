@@ -54,3 +54,4 @@ NOTE:
 * linux17.0.4 增加性能测试 ，这样测试改善后的效果了
 * linux17.0.5 调整fifo缓冲区 
 * linux17.0.6 use linkedlist implement timer 
+* linux17.0.7 使用哨兵优化int20代码 ， 减少不少代码 
