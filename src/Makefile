@@ -5,7 +5,6 @@ default:
 	make run
 %.o:*/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
-
 ld:$(OBJS)
 	ld -m elf_i386 -r $(OBJS)  -o cmain.o
 tool:imgTool.c
@@ -17,11 +16,11 @@ asm:objconvAsm _cmain.asm greenos.asm kernel.asm  Makefile
 	nasm greenos.asm -o boot 
 	nasm kernel.asm -o kernel
 img:asm boot kernel tool  Makefile
-	dd if=/dev/zero of=zImg bs=512 count=2880
-	./imgTool boot zImg 0 0 1
-	./imgTool kernel zImg 1 0 1
-run:img zImg
-	qemu-system-i386 -vga std -display sdl  -m 512M -drive file=zImg,format=raw,index=0,if=floppy	
+	#dd if=/dev/zero of=zImg bs=512 count=2880
+	./imgTool boot zImg.img 0 0 1
+	./imgTool kernel zImg.img 1 0 1
+run:img zImg.img
+	qemu-system-i386 -vga std -display sdl  -m 512M -drive file=zImg.img,format=raw,index=0,if=floppy	
 clean:
-	rm -f boot kernel imgTool zImg  *.o *cmain.asm 
+	rm -f boot kernel imgTool *.img  *.o *cmain.asm 
 	

@@ -49,3 +49,4 @@ NOTE:
 * linux16.0.6 speed up timer interrupt 
 * linux17.0.0 display keyboard assci code  
 * linux17.0.1 speed up timer interrupt v2
+* linux17.0.2 speed up timer interrupt v3

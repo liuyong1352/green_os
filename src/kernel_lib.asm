@@ -36,15 +36,12 @@ io_out32:
     out dx, eax
     ret
 
-io_cli:
-    cli
-    ret
-io_load_eflags:
+load_eflags:
     pushfd
     pop  eax
     ret
 
-io_store_eflags:
+store_eflags:
     mov eax, [esp + 4]
     push eax
     popfd

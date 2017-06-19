@@ -325,7 +325,7 @@ void printx(char c){
 
 void set_palette(int start , int end , unsigned char* rgb) {
 	int i , eflags ;
-	eflags = io_load_eflags();
+	eflags = load_eflags();
 	cli();
 	outb_p(0x03c8 , start); //set palette number
 	for(i = start ; i <= end ; i++ ) {
@@ -334,7 +334,7 @@ void set_palette(int start , int end , unsigned char* rgb) {
 		outb_p(0x03c9,rgb[2]/4);
 		rgb = rgb + 3 ;
 	}
-	io_store_eflags(eflags);
+	store_eflags(eflags);
 }
 
 void init_palette(void){

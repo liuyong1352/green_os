@@ -12,6 +12,7 @@ void init_pit(){
 	outb_p(PIT_CNT0 , 0x2e);
 	timerctl.count = 0 ;
 	timerctl.next = 0xffffffff; //no timer used 
+	timerctl.using = 0  ;
 	for( int i = 0 ; i < MAX_TIMER ; i++ ){
 		timerctl.timer[i].flags = 0; //not used
 	}
@@ -35,12 +36,25 @@ void timer_init(struct TIMER *timer , struct FIFO *fifo , unsigned char data) {
 	timer->data = data ; 
 }
 void timer_settime(struct TIMER *timer , unsigned int timeout )  {
-
+	int e , i , j ;
 	timer->timeout = timerctl.count + timeout ;
 	timer->flags   = TIMER_FLAGS_USING ; 
-	if(timerctl.next > timer->timeout){
-		timerctl.next = timer->timeout ; 
+	e = load_eflags();
+	cli() ; 
+	for(i = 0 ; i < timerctl.using ; i++ ) {
+		if(timerctl.timers[i]->timeout >= timer->timeout ) {
+			break ; 
+		}
 	}
+
+	for(j = timerctl.using ; j > i ; j-- ){
+		timerctl.timers[j] = timerctl.timers[j - 1] ; 
+	}
+	timerctl.using++ ; 
+	timerctl.timers[i] = timer ; 
+	timerctl.next = timerctl.timers[0]->timeout ; 
+	store_eflags(e) ; 
+	return ;
 }
 
 void inthandler20(int *esp){
@@ -49,18 +63,23 @@ void inthandler20(int *esp){
 	if(timerctl.next > timerctl.count) {
 		return ; 
 	}
-	timerctl.next = 0xffffffff ; 
-	for(int i = 0 ; i < MAX_TIMER  ; i++ ) {
-		struct TIMER* timer = &timerctl.timer[i] ; 
-		if(timer->flags == TIMER_FLAGS_USING ) {
-			if(timer->timeout <= timerctl.count ) {
-				timer->flags = TIMER_FLAGS_ALLOC ; 
-				fifo_put(timer->fifo , timer->data);
-			} else {
-				if(timerctl.next > timer->timeout) {
-					timerctl.next = timer->timeout ; 
-				}
-			}
+	int i , j ; 
+	for(i = 0 ; i < timerctl.using ; i++ ) {
+		if(timerctl.timers[i]->timeout > timerctl.count ) {
+			break ;
 		}
+		timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC ; 
+		fifo_put(timerctl.timers[i]->fifo , timerctl.timers[i]->data) ; 
+	}	
+	timerctl.using -= i  ;
+	for(j = 0 ; j < timerctl.using ; j++ ) {
+		timerctl.timers[j] = timerctl.timers[i+j] ; 
 	}
+
+	if(timerctl.using > 0 ) {
+		timerctl.next = timerctl.timers[0]->timeout ; 
+	}else {
+		timerctl.next = 0xffffffff ; 
+	}
+	return ;
 }
