@@ -57,3 +57,4 @@ NOTE:
 * linux17.0.7 使用哨兵优化int20代码 ， 减少不少代码 
 * linux18.0.0 优化 显示按键内容  ，分辨率问题 ，以后再修复,在vbox能正常使用
 * linux18.0.1 创建textbox，输入我们想要的内容
+* linux18.0.2 move the window 

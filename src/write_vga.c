@@ -138,6 +138,10 @@ void cmain(void){
 				if(my > ysize - 16 ) 
 					my = ysize - 16 ;
 				sheet_slide(sht_mouse , mx , my) ;
+					if((mdec.btn & 0x01) != 0 ) {
+						//按下左键 ， 移动sht_win 
+						sheet_slide(sht_win , my - 80 , my - 80 ) ; 
+					}
 			}
 				
 			} else if (i == 10 ) {
