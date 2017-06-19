@@ -20,11 +20,11 @@ static int printd_x = 0 , printd_y = 0 ;
 
 struct MEMMAN* memman = (struct MEMMAN*)0x100000;
 void cmain(void){
-	
-	init_palette();
-	init_pit();
 	struct FIFO fifo ;
 	int fifobuf[128] ; 
+	int cursor_x , cursor_c ;	
+	init_palette();
+	init_pit();
 	fifo_init(&fifo , 128 , fifobuf) ; 
 
 	init_keyboard(&fifo , 256);
@@ -76,6 +76,9 @@ void cmain(void){
 	init_mouse( buf_mouse, 99) ;	
 	make_window8(buf_win , 160 ,68  , "window");
 
+	make_textbox8(sht_win , 8 , 28 , 144 , 16 ,COL8_FFFFFF) ; 
+	cursor_x = 8 ;
+	cursor_c = COL8_FFFFFF ; 
 	//showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
 	//showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
 
@@ -92,31 +95,29 @@ void cmain(void){
 	int count = 0 ; 	
 	for(;;) {
 		count++ ; 
-		//showString_sht(sht_win , 40 , 28 , COL8_000000,COL8_C6C6C6 , buf , 8); 
 		cli();
 		if(fifo_status(&fifo)) {
 			int i  = fifo_get(&fifo); 
 			sti() ;
 			if( 256 <= i && i <= 511) {
 				//keyboard data
-			 //1E A 30 B	
-			/*
-			if(i == 0x1C) {
-				//showMemInfo(memAddr + count++) ;
-				//count %= smap_size;
-			showString(buf_back , xsize, 0 , ysize -16 , COL8_000000, buf);
-			sheet_refresh(sht_back, 0 , 0 , xsize , ysize );
-			init_screen(buf_back , xsize , ysize) ; 
-			}
-			*/
-				if(keytable[i - 256] != 0 ){
-				static int x = 0 ; 
-				static int y = 0 ;
-				x += 16 ; 
-				char cbuf[2] = {keytable[i - 256] , 0};
-				showString(buf_back , xsize , x , y  ,COL8_000000 , cbuf) ;
-				sheet_refresh(sht_back , x  , y  ,16 + x , 16 + y  ) ;
+				sprintf(buf , "%x" , i - 256 )  ;
+				showString_sht(sht_back , 0 , 16 ,COL8_FFFFFF,COL8_008484 , buf ,8) ; 
+				if( i < 256 + 0x54) {
+						if(keytable[i - 256] != 0 && cursor_x < 144) { // 一般字符
+							buf[0] = keytable[i - 256] ; 
+							buf[1] = 0  ;
+							showString_sht(sht_win , cursor_x  , 28 ,COL8_000000,COL8_FFFFFF , buf ,1) ; 
+							cursor_x += 8 ; 
+						} 
 				}
+				if( i == 256 + 0x0e && cursor_x > 8 ) {//backspace
+					showString_sht(sht_win , cursor_x  , 28 ,COL8_000000,COL8_FFFFFF , " " ,1) ;
+					cursor_x -= 8 ;  
+				}
+				//光标再显示
+				boxfill(sht_win->buf , sht_win->bxsize , cursor_c , cursor_x , 28 ,cursor_x + 7, 43) ;
+				sheet_refresh(sht_win , cursor_x ,28 , cursor_x + 8 ,44 ) ; 
 			} else if (512 <= i && i <= 767) {
 				//mouse data
 			if(mouse_decode(&mdec , i - 512)) {
@@ -146,16 +147,17 @@ void cmain(void){
 			} else if (i == 3 ) {
 				showString_sht(sht_back , 0 , 84 , COL8_FFFFFF ,COL8_008484 , "3[sec]" , 6) ; 
 				count = 0 ; //开始测定
-			} else if (i == 1) {
-				timer_init(timer3 , &fifo , 0 ) ;
-				boxfill(buf_back , xsize , COL8_FFFFFF , 8 , 96 ,15, 111) ; 
+			} else if(i <= 1) { //光标用的定时器
+				if( i != 0 ) {
+					timer_init(timer3 , &fifo , 0 ) ;
+					cursor_c = COL8_000000 ; 
+				} else {
+					timer_init(timer3, &fifo , 1) ;
+					cursor_c = COL8_FFFFFF ; 
+				}
 				timer_settime(timer3 , 50) ;
-				sheet_refresh(sht_back , 8 , 96, 15 ,111);
-			} else if (i == 0 ) {
-				timer_init(timer3, &fifo , 1) ; 
-				boxfill(buf_back , xsize ,COL8_008484 , 8 , 96 , 15 ,111) ; 
-				timer_settime(timer3 , 50) ;
-				sheet_refresh(sht_back , 8 , 96, 15 ,111);
+				boxfill(sht_win->buf , sht_win->bxsize , cursor_c , cursor_x , 28 ,cursor_x + 7 , 43) ; 
+				sheet_refresh(sht_win , cursor_x  , 28 , cursor_x + 8  ,44);
 			}
 		}else {
 			sti() ; 

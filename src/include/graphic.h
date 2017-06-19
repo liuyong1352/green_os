@@ -2,7 +2,6 @@
 #define _GRAPHIC_H
 #include <sheet.h>
 
-
 #define  COL8_000000  0
 #define  COL8_FF0000  1
 #define  COL8_00FF00  2
@@ -25,9 +24,8 @@ void init_palette(void);
 void boxfill(char* buf , int bxsize , unsigned char color, int x0, int y0,int x1, int y1);
 void init_screen(char* vbuf  ,int xsize , int ysize  );
 void putfont(char* vbuf , int xsize , int x, int y ,char color ,  char c); 
-//void showString(struct SHTCTL* ctl , struct SHEET* sht , int x ,int y , char color , char* s) ; 
 void showString(char* buf , int xsize , int x ,int y , char color , char* s) ; 
 void make_window8(char* buf , int bxsize , int bysize , char *title) ;
-//void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title);
 void init_mouse(char* mouse , char bc) ;
+void make_textbox8(struct SHEET* sht, int x0, int y0, int sx, int sy, int c);
 #endif

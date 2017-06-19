@@ -30,17 +30,6 @@ void showString(char* buf , int bxsize , int x , int y , char color , char* s) {
     }
 }
 
-/*
-void showString(struct SHTCTL* ctl , struct SHEET* sht , int x ,int y , char color , char* s){
-	int vx0 = x  ; 
-	for( ; *s !='\0' ; s++ ) { 
-		putfont(sht->buf ,sht->bxsize,  x ,y ,color,  *s);
-		x += 8 ;     
-    }
-	sheet_refresh(ctl , sht , vx0  , y  , x , y + 16 ) ;    
-}
-*/
-
 void boxfill(char* buf , int bxsize  , unsigned char c, int x0, int y0,int x1, int y1){
 	
 	int x, y ;
@@ -120,64 +109,6 @@ void make_window8(char* buf , int bxsize , int bysize , char *title) {
     }
 }
 
-/*
-void make_window8(struct SHTCTL *shtctl, struct SHEET *sht,  char *title) {
-
-    static char closebtn[14][16] = {
-        "OOOOOOOOOOOOOOO@", 
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQ@@QQQQ@@QQ$@",
-        "OQQQQ@@QQ@@QQQ$@",
-        "OQQQQQ@@@@QQQQ$@",
-        "OQQQQQQ@@QQQQQ$@",
-        "OQQQQQ@@@@QQQQ$@",
-        "OQQQQ@@QQ@@QQQ$@",
-        "OQQQ@@QQQQ@@QQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "O$$$$$$$$$$$$$$@",
-        "@@@@@@@@@@@@@@@@"
-    };
-
-    int x, y;
-    char c;
-    int bxsize = sht->bxsize;
-    int bysize = sht->bysize;
-    boxfill(sht->buf, bxsize, COL8_C6C6C6, 0, 0, bxsize - 1, 0);
-    boxfill(sht->buf, bxsize, COL8_FFFFFF, 1, 1, bxsize - 2, 1);
-    boxfill(sht->buf, bxsize, COL8_C6C6C6, 0, 0, 0,         bysize - 1);
-    boxfill(sht->buf, bxsize, COL8_FFFFFF, 1, 1, 1,         bysize - 1);
-    boxfill(sht->buf, bxsize, COL8_848484, bxsize - 2, 1, bxsize - 2, bysize - 2);
-    boxfill(sht->buf, bxsize, COL8_000000, bxsize - 1, 0, bxsize - 1, bysize - 1);
-    boxfill(sht->buf, bxsize, COL8_C6C6C6, 2, 2, bxsize - 3, bysize - 3);
-    boxfill(sht->buf, bxsize, COL8_000084, 3, 3, bxsize - 4, 20);
-    boxfill(sht->buf, bxsize, COL8_848484, 1, bysize - 2, bxsize - 2, bysize - 2);
-    boxfill(sht->buf, bxsize, COL8_000000, 0, bysize - 1, bxsize - 1, bysize - 1);
-
-    showString(shtctl, sht, 24, 4, COL8_FFFFFF, title);
-
-    for (y = 0; y < 14; y++) {
-        for (x = 0; x < 16; x++) {
-            c = closebtn[y][x];
-            if (c == '@') {
-                c = COL8_000000;
-            } else if (c == '$') {
-                c = COL8_848484;
-            } else if (c == 'Q') {
-                c = COL8_C6C6C6;
-            } 
-            else {
-                c = COL8_FFFFFF;
-            }
-
-            sht->buf[(5+y) * sht->bxsize + (sht->bxsize - 21 + x)] = c;
-        }
-
-    }
-}
-*/
-
 void init_mouse(char* mouse , char bc) {
 	static char cursor[16][16] = {
          "**************..",
@@ -204,5 +135,20 @@ void init_mouse(char* mouse , char bc) {
 			if(cursor[y][x] == '.') mouse[y * 16 + x] = bc ; 
 		}
 	}
+	return ;
+}
 
+void make_textbox8(struct SHEET* sht, int x0, int y0, int sx, int sy, int c)
+{
+	int x1 = x0 + sx, y1 = y0 + sy;
+	boxfill(sht->buf, sht->bxsize, COL8_848484, x0 - 2, y0 - 3, x1 + 1, y0 - 3);
+	boxfill(sht->buf, sht->bxsize, COL8_848484, x0 - 3, y0 - 3, x0 - 3, y1 + 1);
+	boxfill(sht->buf, sht->bxsize, COL8_FFFFFF, x0 - 3, y1 + 2, x1 + 1, y1 + 2);
+	boxfill(sht->buf, sht->bxsize, COL8_FFFFFF, x1 + 2, y0 - 3, x1 + 2, y1 + 2);
+	boxfill(sht->buf, sht->bxsize, COL8_000000, x0 - 1, y0 - 2, x1 + 0, y0 - 2);
+	boxfill(sht->buf, sht->bxsize, COL8_000000, x0 - 2, y0 - 2, x0 - 2, y1 + 0);
+	boxfill(sht->buf, sht->bxsize, COL8_C6C6C6, x0 - 2, y1 + 1, x1 + 0, y1 + 1);
+	boxfill(sht->buf, sht->bxsize, COL8_C6C6C6, x1 + 1, y0 - 2, x1 + 1, y1 + 1);
+	boxfill(sht->buf, sht->bxsize, c, x0 - 1, y0 - 1, x1 + 0, y1 + 0);
+	return;
 }
