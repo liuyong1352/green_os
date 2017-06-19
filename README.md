@@ -50,3 +50,4 @@ NOTE:
 * linux17.0.0 display keyboard assci code  
 * linux17.0.1 speed up timer interrupt v2
 * linux17.0.2 speed up timer interrupt v3
+* linux17.0.3 增加显示字符串方法 ，简化timer判断
