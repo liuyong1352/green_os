@@ -13,14 +13,15 @@
 #define TIMER_FLAGS_USING 2
 
 struct TIMER {
+	struct TIMER* next ; 
 	unsigned int timeout , flags ;
 	struct FIFO *fifo ;
 	int data ; 
 };
 
 struct TIMERCTL {
-	unsigned int count , next , using ; 
-	struct TIMER* timers[MAX_TIMER] ; 
+	unsigned int count , next_timeout , using ; 
+	struct TIMER* header ; 
 	struct TIMER timer[MAX_TIMER] ; 
 };
 

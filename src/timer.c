@@ -22,7 +22,7 @@ void init_pit(){
 	outb_p(PIT_CNT0 , 0x9c);
 	outb_p(PIT_CNT0 , 0x2e);
 	timerctl.count = 0 ;
-	timerctl.next = 0xffffffff; //no timer used 
+	timerctl.next_timeout = 0xffffffff; //no timer used 
 	timerctl.using = 0  ;
 	for( int i = 0 ; i < MAX_TIMER ; i++ ){
 		timerctl.timer[i].flags = 0; //not used
@@ -47,50 +47,76 @@ void timer_init(struct TIMER *timer , struct FIFO *fifo , int data) {
 	timer->data = data ; 
 }
 void timer_settime(struct TIMER *timer , unsigned int timeout )  {
-	int e , i , j ;
+	int e  ;
+	struct TIMER *t , *s ; 
 	timer->timeout = timerctl.count + timeout ;
 	timer->flags   = TIMER_FLAGS_USING ; 
 	e = load_eflags();
 	cli() ; 
-	for(i = 0 ; i < timerctl.using ; i++ ) {
-		if(timerctl.timers[i]->timeout >= timer->timeout ) {
-			break ; 
+	timerctl.using++ ; 
+	if(timerctl.using == 1 ) {
+		//处于运行状态的定时器只有这一个时
+		timerctl.header = timer ; 
+		timer->next = 0 ; //no next 
+		timerctl.next_timeout = timer->timeout ; 
+		store_eflags(e);
+		return ;
+	}
+
+	t = timerctl.header ; 
+	if(timer->timeout <= t->timeout) {
+		//插入最前面的情况下
+		timerctl.header = timer ; 
+		timer->next = t ; //no next 
+		timerctl.next_timeout = timer->timeout ; 
+		store_eflags(e);
+		return ;
+	}
+	
+	for(;;){
+		s = t ; 
+		t = t->next ; 
+		if(t == 0 )
+			break ; //last one 
+		if(timer->timeout <= t->timeout){
+			s->next = timer ; 
+			timer->next = t ;
+			store_eflags(e);
+			return ;
 		}
 	}
 
-	for(j = timerctl.using ; j > i ; j-- ){
-		timerctl.timers[j] = timerctl.timers[j - 1] ; 
-	}
-	timerctl.using++ ; 
-	timerctl.timers[i] = timer ; 
-	timerctl.next = timerctl.timers[0]->timeout ; 
+	//插入最后面的情况下
+	s->next = timer ; 
+	timer->next = 0 ;
 	store_eflags(e) ; 
 	return ;
 }
 
 void inthandler20(int *esp){
+	int i  ; 
+	struct TIMER* timer ; 
 	outb_p(PIC0_OCW2 , 0x60);
 	timerctl.count++  ;
-	if(timerctl.next > timerctl.count) {
+	if(timerctl.next_timeout > timerctl.count) {
 		return ; 
 	}
-	int i , j ; 
+	timer = timerctl.header ; 
 	for(i = 0 ; i < timerctl.using ; i++ ) {
-		if(timerctl.timers[i]->timeout > timerctl.count ) {
+		if(timer->timeout > timerctl.count ) {
 			break ;
 		}
-		timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC ; 
-		fifo_put(timerctl.timers[i]->fifo , timerctl.timers[i]->data) ; 
+		timer->flags = TIMER_FLAGS_ALLOC ; 
+		fifo_put(timer->fifo , timer->data) ;
+		timer = timer->next ;  
 	}	
 	timerctl.using -= i  ;
-	for(j = 0 ; j < timerctl.using ; j++ ) {
-		timerctl.timers[j] = timerctl.timers[i+j] ; 
-	}
+	timerctl.header = timer ; 
 
 	if(timerctl.using > 0 ) {
-		timerctl.next = timerctl.timers[0]->timeout ; 
+		timerctl.next_timeout = timerctl.header->timeout ; 
 	}else {
-		timerctl.next = 0xffffffff ; 
+		timerctl.next_timeout = 0xffffffff ; 
 	}
 	return ;
 }

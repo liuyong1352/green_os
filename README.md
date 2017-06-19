@@ -53,3 +53,4 @@ NOTE:
 * linux17.0.3 增加显示字符串方法 ，简化timer判断
 * linux17.0.4 增加性能测试 ，这样测试改善后的效果了
 * linux17.0.5 调整fifo缓冲区 
+* linux17.0.6 use linkedlist implement timer 
