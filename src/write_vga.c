@@ -1,4 +1,11 @@
 #include <write_vga.h>
+/**
+benchmarck :
+0268673F
+0268B908
+026D99C0
+0260EBDB
+**/
 
 void toHex(char c , char* buf) ; 
 void printdTotalMem(struct MEMMAN* man) ; 
@@ -86,11 +93,11 @@ void cmain(void){
 	init_mouse( buf_mouse, 99) ;	
 	make_window8(buf_win , 160 ,68  , "window");
 
-	showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
-	showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
+	//showString(buf_win ,160  , 24 ,28 ,COL8_000000 , "Welcome to") ; 
+	//showString(buf_win ,160  , 24 ,44 ,COL8_000000 , "M-OS!") ; 
 
 	sheet_slide(sht_back , 0 , 0 ) ; 
-	sheet_slide(sht_mouse , mx , my) ; 		
+	sheet_slide(sht_mouse , mx , my - 28) ; 		
 	sheet_slide(sht_win , mx - 70  , my - 30) ; 		
 
 	sheet_updown(sht_back , 0 ) ;
@@ -100,15 +107,8 @@ void cmain(void){
 	char buf[64] ; 
 	int count = 0 ; 	
 	for(;;) {
-		//count++ ; 
-		//sprintf(buf , "%x" , timer->timeout) ;
-		sprintf(buf , "%x" ,  timerctl->count) ;
-		/*
-		boxfill(buf_win , 160 , COL8_C6C6C6 , 40 , 28  ,119 , 43) ;  
-		showString(buf_win , 160 , 40 , 28 , COL8_000000 , buf) ; 
-		sheet_refresh(sht_win , 40 , 28 , 120 , 44) ; 
-		*/
-		showString_sht(sht_win , 40 , 28 , COL8_000000,COL8_C6C6C6 , buf , 8); 
+		count++ ; 
+		//showString_sht(sht_win , 40 , 28 , COL8_000000,COL8_C6C6C6 , buf , 8); 
 		cli();
 		if(fifo_status(&keyfifo)) {
 			char i  = fifo_get(&keyfifo); 
@@ -155,8 +155,11 @@ void cmain(void){
 			sti();
 			if(dat == 10 ) {
 				showString_sht(sht_back , 0 , 64 , COL8_FFFFFF ,COL8_008484 , "10[sec]" , 7) ; 
+				sprintf(buf , "%x" , count) ; 
+				showString_sht(sht_win , 40 ,28 , COL8_000000 ,COL8_C6C6C6 , buf , 8) ; 
 			} else if(dat == 3) {
 				showString_sht(sht_back , 0 , 84 , COL8_FFFFFF ,COL8_008484 , "3[sec]" , 6) ; 
+				count = 0 ; //开始测定
 			} else {
 			
 				if( dat != 0 ) {
