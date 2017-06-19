@@ -5,7 +5,7 @@ int fifo_status(struct FIFO* fifo) {
 }
 
 
-void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) {
+void fifo_init(struct FIFO* fifo , int size , int* buf) {
 	
 	fifo->size	= size ;
 	fifo->buf	= buf ;
@@ -13,9 +13,10 @@ void fifo_init(struct FIFO* fifo , int size , unsigned char* buf) {
 	fifo->flags	= 0;
 	fifo->p 	= 0 ;
 	fifo->q 	= 0 ; 
+	return ; 
 }
 
-int fifo_put(struct FIFO* fifo ,unsigned char data ) {
+int fifo_put(struct FIFO* fifo ,int data ) {
 	if(fifo->free == 0 ) {
 		fifo->flags |= FLAGS_OVERRUN ; 
 		return -1 ;	
@@ -33,8 +34,11 @@ int fifo_get(struct FIFO* fifo ){
 		return -1 ;
 	}
 	data = fifo->buf[fifo->q] ;
-	fifo->free++ ;
 	fifo->q++ ;
-	fifo->q %= fifo->size ; 
+	//fifo->q %= fifo->size ; 
+	if(fifo->q == fifo->size) {
+		fifo->q = 0 ;
+	}
+	fifo->free++ ;
 	return data ; 
 }

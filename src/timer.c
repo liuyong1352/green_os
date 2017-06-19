@@ -1,5 +1,16 @@
 #include <timer.h>
 
+/**
+benchmarck :
+v1
+0268673F
+0268B908
+026D99C0
+0260EBDB
+v2
+076D1337
+**/
+
 static struct TIMERCTL timerctl ;
 
 struct TIMERCTL* getTimerCTL() {
@@ -31,7 +42,7 @@ struct TIMER *timer_alloc() {
 void timer_free(struct TIMER *timer) {
 	timer->flags = 0 ; 
 }
-void timer_init(struct TIMER *timer , struct FIFO *fifo , unsigned char data) {
+void timer_init(struct TIMER *timer , struct FIFO *fifo , int data) {
 	timer->fifo = fifo ;
 	timer->data = data ; 
 }

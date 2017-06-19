@@ -15,7 +15,7 @@
 struct TIMER {
 	unsigned int timeout , flags ;
 	struct FIFO *fifo ;
-	unsigned char data ; 
+	int data ; 
 };
 
 struct TIMERCTL {
@@ -29,7 +29,7 @@ void inthandler(int *esp) ;
 void init_pit() ; 
 struct TIMER *timer_alloc();
 void timer_free(struct TIMER *timer) ;
-void timer_init(struct TIMER *timer , struct FIFO *fifo , unsigned char data) ; 
+void timer_init(struct TIMER *timer , struct FIFO *fifo , int data) ; 
 void timer_settime(struct TIMER *timer , unsigned int timeout ) ; 
 
 #endif 
