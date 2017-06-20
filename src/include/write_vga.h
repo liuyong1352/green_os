@@ -7,6 +7,7 @@
 #include <kernel.h>
 #include <fifo.h>
 #include <keyboard.h>
+#include <sched.h>
 
 
 void int2hex(unsigned int x , char* buf) ;

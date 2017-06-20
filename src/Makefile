@@ -1,6 +1,8 @@
 CC =gcc
 CFLAGS =-m32 -fno-stack-protector -fno-asynchronous-unwind-tables -s  -I include
-OBJS =write_vga.o fifo.o sheet.o timer.o memory.o delay.o graphic.o vsprintf.o keyboard.o 
+OBJS =write_vga.o fifo.o sheet.o timer.o memory.o delay.o graphic.o vsprintf.o keyboard.o \
+	sched.o
+
 default:
 	make run
 %.o:*/%.c

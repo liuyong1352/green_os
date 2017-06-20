@@ -8,8 +8,10 @@
 
 DA_32		EQU	4000h	; 32 位段
 DA_C		EQU	98h	; 存在的只执行代码段属性值
+DA_CR		EQU	9Ah
 DA_DRW		EQU	92h	; 存在的可读写数据段属性值
 DA_DRWA     equ 93h ; 存在的已访问可读写数据段类型值
+DA_LIMIT_4K     equ 8000h 
 DA_386IGate equ 8eh ; 中断调用门 
 
 ;Gate selecotor , offset ,Dcount ,Attr

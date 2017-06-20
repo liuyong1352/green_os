@@ -5,11 +5,15 @@ jmp entry
 [SECTION .gdt]
 ;                                  段基址          段界限                属性
 LABEL_GDT:	    Descriptor        0,            0,                   0  
-LABEL_DESC_CODE32:  Descriptor        0,           SegCode32Len- 1,                 DA_C + DA_32
-;LABEL_DESC_CODE32:  Descriptor        0,           0ffffffffh,                 DA_C + DA_32
+;LABEL_DESC_CODE32:  Descriptor        0,           SegCode32Len- 1,                 DA_CR|DA_C|DA_32
+LABEL_DESC_CODE32:  Descriptor        0,           0ffffffffh,                DA_CR|DA_32|DA_LIMIT_4K
 LABEL_DESC_VIDEO:   Descriptor     0B8000h,         0ffffh,            DA_DRW
-LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRW
-LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRWA + DA_32
+LABEL_DESC_VRAM:    Descriptor     0,         0ffffffffh,            DA_DRWA|DA_LIMIT_4K
+LABEL_DESC_STACK:	Descriptor    0,         TopOfStack,            DA_DRWA|DA_32
+LABEL_DESC_5:	Descriptor    0,       0fffffh , 0409Ah
+LABEL_DESC_6:	Descriptor    0,       0 , 0
+LABEL_DESC_7:	Descriptor    0,       0 , 0
+LABEL_DESC_8:	Descriptor    0,       0 , 0
 
 GdtLen     equ    $ - LABEL_GDT
 GdtPtr     dw     GdtLen - 1
@@ -162,7 +166,7 @@ smap_end:
      or    eax , 1
      mov   cr0, eax
 
-     jmp   dword  SelectorCode32: 0
+     jmp   dword  1*8: 0
      
 	[SECTION .s32]
      [BITS  32]

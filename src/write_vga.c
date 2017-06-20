@@ -4,6 +4,8 @@ void toHex(char c , char* buf) ;
 void printdTotalMem(struct MEMMAN* man) ; 
 void testMem(struct MEMMAN* man) ;
 
+void task_b_main(void);
+
 static char* vram = (char*)0xa0000 ; 
 static int xsize  = 320 ;
 static int ysize  = 200 ; 
@@ -89,9 +91,35 @@ void cmain(void){
 	sheet_updown(sht_back , 0 ) ;
 	sheet_updown(sht_win , 1) ;
 	sheet_updown(sht_mouse , 2) ;
-	
-	//printdTotalMem(memman) ;
+
+	static struct TSS32 tss_a ; 
+	//static struct TSS32 tss_b ; 
+	tss_a.ldtr = 0 ;
+	tss_a.iomap = 0x40000000 ;
+	/*
+	tss_b.ldtr = 0 ;
+	tss_b.iomap = 0x40000000 ;
+	tss_b.eip = (int) &task_b_main ; 
+	tss_b.eflags = 0x00000202 ;
+	tss_b.esp = 1024 ;
+	tss_b.es  = 1 ;
+	tss_b.cs  = 1 ;
+	tss_b.ss  = 1 ;
+	tss_b.ds  = 1 ;
+	tss_b.fs  = 1 ;
+	tss_b.gs  = 1 ;
+	*/
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR*)get_addr_gdt() ; 
+	set_segmdesc(gdt + 6 ,103 ,(int)&tss_a , AR_TSS32) ;
+	set_segmdesc(gdt + 7 ,103 ,(int)&tss_a , AR_TSS32) ;
+	//set_segmdesc(gdt + 8 ,103 ,(int)&tss_b , AR_TSS32) ;
+	//set_segmdesc(gdt + 5 ,0xffff ,(int)&task_b_main , 0x409a) ;
+	load_tr(6 * 8);
+	//load_tr(7 * 8);
+	//taskswitch6();
 	char buf[64] ; 
+	sprintf(buf , "%x %x" , get_cs() , get_ss());
+	showString_sht(sht_back , 0 , 32 ,COL8_FFFFFF,COL8_008484 , buf ,20) ; 
 	int count = 0 ; 	
 	for(;;) {
 		count++ ; 
@@ -148,6 +176,7 @@ void cmain(void){
 				showString_sht(sht_back , 0 , 64 , COL8_FFFFFF ,COL8_008484 , "10[sec]" , 7) ; 
 				sprintf(buf , "%x" , count) ; 
 				showString_sht(sht_win , 40 ,28 , COL8_000000 ,COL8_C6C6C6 , buf , 8) ; 
+				//taskswitch6() ; 
 			} else if (i == 3 ) {
 				showString_sht(sht_back , 0 , 84 , COL8_FFFFFF ,COL8_008484 , "3[sec]" , 6) ; 
 				count = 0 ; //开始测定
@@ -328,3 +357,10 @@ void showString_sht(struct SHEET *sht ,int x , int y , int c , int b , char* s ,
 		sheet_refresh(sht , x , y , x + l*8  , y + 16) ;
 		return ;  
 }
+
+void task_b_main(void){
+	for(;;){
+		
+	}
+}
+

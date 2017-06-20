@@ -50,3 +50,24 @@ store_eflags:
 get_smap_buf:
 	mov eax , smap_buf
 	ret
+
+get_addr_gdt:
+	mov eax , LABEL_GDT 
+	ret
+load_tr:
+	LTR [esp + 4 ]
+	ret
+
+taskswitch6:;void taskswitch6(void);
+	jmp 7*8:0
+	ret
+
+get_cs:
+	xor eax , eax 
+	mov ax , cs 
+	ret
+get_ss:
+	xor eax , eax 
+	mov ax , ds 
+	ret
+

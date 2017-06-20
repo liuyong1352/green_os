@@ -23,4 +23,8 @@ unsigned char inb_p(int port);
 int	load_eflags();
 void store_eflags(int eflags);
 
+int get_addr_gdt() ; 
+void load_tr(int tr);
+int get_cs();
+int get_ss();
 #endif
